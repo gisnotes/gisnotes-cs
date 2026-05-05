@@ -9,7 +9,7 @@ const baseUrl = "http://localhost:8080"; // 后端接口
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd());
   const { VITE_APP_ENV, VITE_CESIUM_BASE_URL } = env;
-  const base = VITE_APP_ENV === "production" ? "/" : "/";
+  const base = VITE_APP_ENV === "production" ? "/gisnotes-cs/" : "/";
   return {
     base,
     plugins: [

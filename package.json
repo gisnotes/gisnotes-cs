@@ -10,7 +10,7 @@
     "build:prod": "vite build",
     "build:stage": "vite build --mode staging",
     "preview": "vite preview",
-    "deploy": "npm run build:prod && npx gh-pages -d dist"
+    "deploy": "pnpm build:prod && pnpm exec gh-pages -d dist"
   },
   "repository": {
     "type": "git",
