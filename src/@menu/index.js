@@ -9,12 +9,12 @@ export const LOCAL_ROUTES = [
     redirect: "noRedirect",
     component: "Layout",
     alwaysShow: true,
-    meta: { title: "视图", icon: "view", roles: ["admin"] },
+    meta: { title: "二维视图", icon: "view", roles: ["admin"] },
     children: [
       {
         path: "multipleSyncedViews",
         component: "view/multipleSyncedViews/index",
-        name: "multipleSyncedViews",
+        name: "MultipleSyncedViews",
         hidden: false,
         meta: { title: "二三维视图同步", icon: "鹰眼视图", roles: ["admin"] },
       },
