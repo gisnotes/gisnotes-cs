@@ -9,7 +9,7 @@
   </demo-box>
 </template>
 
-<script setup name="multipleSyncedViews">
+<script setup name="MultipleSyncedViews">
 import DemoBox from "@/components/DemoBox/index.vue";
 import IndexSourceCode from "./index.vue?raw";
 

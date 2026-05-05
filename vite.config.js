@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import path from "path";
+import fs from "fs";
 import createVitePlugins from "./vite/plugins";
 import createCesiumPlugins from "./vite/plugins/cesium-import";
 
@@ -15,6 +16,16 @@ export default defineConfig(({ mode, command }) => {
     plugins: [
       ...createCesiumPlugins(mode, command, base, VITE_CESIUM_BASE_URL),
       ...createVitePlugins(env, command === "build"),
+      {
+        name: "copy-index-to-404",
+        writeBundle() {
+          const src = path.resolve(__dirname, "dist", "index.html");
+          const dest = path.resolve(__dirname, "dist", "404.html");
+          if (fs.existsSync(src)) {
+            fs.copyFileSync(src, dest);
+          }
+        },
+      },
     ],
     resolve: {
       // https://cn.vitejs.dev/config/#resolve-alias
