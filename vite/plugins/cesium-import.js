@@ -101,15 +101,19 @@ export default function createCesiumPlugins(
       },
     });
   } else {
-    plugins.push({
-      name: "vite:cesium-build-copy",
-      apply: "build",
-      closeBundle() {
-        const outDir = path.join(process.cwd(), "dist", CESIUM_SERVE_PREFIX);
-        const sourceDir = path.join(process.cwd(), CESIUM_SOURCE_ROOT);
-        copyDirRecursive(sourceDir, outDir);
-      },
-    });
+    const isExternalCesium =
+      cesiumBaseUrl && /^https?:\/\//.test(cesiumBaseUrl);
+    if (!isExternalCesium) {
+      plugins.push({
+        name: "vite:cesium-build-copy",
+        apply: "build",
+        closeBundle() {
+          const outDir = path.join(process.cwd(), "dist", CESIUM_SERVE_PREFIX);
+          const sourceDir = path.join(process.cwd(), CESIUM_SOURCE_ROOT);
+          copyDirRecursive(sourceDir, outDir);
+        },
+      });
+    }
   }
 
   return plugins;

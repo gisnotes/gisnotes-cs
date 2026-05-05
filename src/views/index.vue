@@ -17,25 +17,12 @@ const STATUS = {
   PENDING: "#909399",
 };
 
-const VIEW2D_NODES = [
+const VIEW_NODES = [
   {
-    id: "view2D1",
+    id: "view2D",
     topic: "Multiple Synced Views",
     status: STATUS.DONE,
     route: "/view/multipleSyncedViews",
-  },
-  {
-    id: "view2D2",
-    topic: "Rotatable 2D Map",
-    status: STATUS.PENDING,
-  },
-];
-
-const CATEGORIES = [
-  {
-    id: "view2D",
-    topic: "二维视图",
-    nodes: VIEW2D_NODES,
   },
 ];
 
@@ -46,30 +33,30 @@ function buildMindData() {
     data: {
       id: "root",
       topic: "Cesium示例归类",
-      children: CATEGORIES.map((cat) => ({
-        id: cat.id,
-        topic: cat.topic,
-        children: cat.nodes.map((n) => ({
-          ...n,
-          "background-color": n.status,
-          clickable: n.status === STATUS.DONE,
-          children: n.children?.map((c) => ({ ...c, clickable: true })),
-        })),
-      })),
+      children: [
+        {
+          id: "view",
+          topic: "二维视图",
+          children: VIEW_NODES.map((n) => ({
+            ...n,
+            "background-color": n.status,
+            clickable: n.status === STATUS.DONE,
+            children: n.children?.map((c) => ({ ...c, clickable: true })),
+          })),
+        },
+      ],
     },
   };
 }
 
 function buildHandlers() {
   const handlers = {};
-  for (const cat of CATEGORIES) {
-    for (const n of cat.nodes) {
-      if (n.route) handlers[n.id] = () => router.push(n.route);
-      if (n.children) {
-        for (const c of n.children) {
-          if (c.externalLink)
-            handlers[c.id] = () => openExternalLink(c.externalLink);
-        }
+  for (const n of VIEW_NODES) {
+    if (n.route) handlers[n.id] = () => router.push(n.route);
+    if (n.children) {
+      for (const c of n.children) {
+        if (c.externalLink)
+          handlers[c.id] = () => openExternalLink(c.externalLink);
       }
     }
   }
