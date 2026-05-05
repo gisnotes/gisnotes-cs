@@ -1,8 +1,9 @@
 <template>
   <demo-box :codeBlocks>
     <div class="multiple-synced-views">
-      <!-- 两个容器 -->
+      <!-- 三维视图 -->
       <div class="viewer-container" ref="viewer3DRef"></div>
+      <!-- 二维视图 -->
       <div class="viewer-container" ref="viewer2DRef"></div>
     </div>
   </demo-box>
@@ -29,7 +30,6 @@ const viewer2DRef = ref(null);
 let viewer3D = null;
 let viewer2D = null;
 
-// 环境配置逻辑保持不变
 const sysBaseUrl = import.meta.env.BASE_URL;
 const mode = import.meta.env.MODE;
 const sourceCesiumBaseUrl = import.meta.env.VITE_CESIUM_BASE_URL;
@@ -94,32 +94,40 @@ const sync2DView = () => {
 };
 
 onMounted(() => {
-  // 1. 创建共享时钟
+  /**
+   * 由于el-splitter组件的宽度是动态计算的，
+   * 所以需要等待 DOM 元素加载完成后再初始化，
+   * 因此这里采用 setTimeout 确保 DOM 元素加载完成
+   */
+  setTimeout(() => {
+    init();
+  }, 0);
+});
+
+function init() {
   const sharedClock = new Cesium.ClockViewModel();
 
-  // 2. 初始化 3D 视图
   viewer3D = createGenericViewer(viewer3DRef.value, {
     clockViewModel: sharedClock,
   });
 
-  // 3. 初始化 2D 视图
   viewer2D = createGenericViewer(viewer2DRef.value, {
     clockViewModel: sharedClock,
     sceneMode: Cesium.SceneMode.SCENE2D,
   });
 
-  // 4. 配置联动
+  // 配置联动
   viewer3D.camera.changed.addEventListener(sync2DView);
   viewer3D.camera.percentageChanged = 0.01;
 
-  // 5. 禁用 2D 视图交互（使其只读）
+  // 禁用 2D 视图交互，使其只读
   const controller2D = viewer2D.scene.screenSpaceCameraController;
   controller2D.enableRotate = false;
   controller2D.enableTranslate = false;
   controller2D.enableZoom = false;
   controller2D.enableTilt = false;
   controller2D.enableLook = false;
-});
+}
 
 // 销毁时解绑事件，防止内存泄漏
 onBeforeUnmount(() => {
@@ -133,14 +141,14 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .multiple-synced-views {
-  display: flex; // 横向并排
+  display: flex;
   width: 100%;
   height: 100%;
-  gap: 2px; // 两个视图中间加点缝隙
+  gap: 2px;
   background-color: #000;
 
   .viewer-container {
-    flex: 1; // 两者平分空间
+    flex: 1;
     height: 100%;
     position: relative;
   }

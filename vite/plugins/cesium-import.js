@@ -48,7 +48,7 @@ export default function createCesiumPlugins(
       enforce: "pre",
       resolveId(id) {
         if (id === "cesium") {
-          return { id: "\0cesium", external: true };
+          return { id: "\0cesium" };
         }
       },
       load(id) {
