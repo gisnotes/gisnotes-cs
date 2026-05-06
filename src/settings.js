@@ -27,7 +27,7 @@ export default {
   /**
    * 持久化标签页
    */
-  tagsViewPersist: true,
+  tagsViewPersist: false,
 
   /**
    * 显示页签图标

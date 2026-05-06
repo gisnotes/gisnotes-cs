@@ -75,12 +75,14 @@ function addIframe() {
 /* 移动端fixed-header优化 */
 @media screen and (max-width: 991px) {
   .fixed-header + .app-main {
+    height: calc(100dvh - 50px);
     padding-bottom: max(60px, calc(constant(safe-area-inset-bottom) + 40px));
     padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px));
     overscroll-behavior-y: none;
   }
 
   .hasTagsView .fixed-header + .app-main {
+    height: calc(100dvh - 84px);
     padding-bottom: max(60px, calc(constant(safe-area-inset-bottom) + 40px));
     padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px));
     overscroll-behavior-y: none;

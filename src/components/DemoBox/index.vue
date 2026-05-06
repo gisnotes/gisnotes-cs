@@ -46,6 +46,7 @@ $border-color: #ddd;
   height: 100%;
   overflow: hidden;
   box-sizing: border-box;
+  position: relative;
 }
 
 :deep(.el-splitter) {
