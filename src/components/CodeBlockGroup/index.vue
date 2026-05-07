@@ -30,7 +30,7 @@ import CodeBox from "@/components/CodeBox/index.vue";
 // Vue 3.3+ 显式声明组件名，方便递归调用时 Vue 内部识别
 defineOptions({ name: "CodeBlockGroup" });
 
-defineProps({
+const props = defineProps({
   blocks: {
     type: Array,
     required: true,
