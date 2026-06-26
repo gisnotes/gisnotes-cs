@@ -18,6 +18,13 @@ export const LOCAL_ROUTES = [
         hidden: false,
         meta: { title: "二三维视图同步", icon: "鹰眼视图", roles: ["admin"] },
       },
+      {
+        path: "rotatable2DMap",
+        component: "view/rotatable2DMap/index",
+        name: "Rotatable2DMap",
+        hidden: false,
+        meta: { title: "可旋转的二维地图", icon: "2dmap", roles: ["admin"] },
+      },
     ],
   },
 ];

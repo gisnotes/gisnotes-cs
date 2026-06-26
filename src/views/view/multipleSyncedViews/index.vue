@@ -24,8 +24,8 @@ const codeBlocks = ref([
   },
 ]);
 
-const viewer3DRef = ref(null);
-const viewer2DRef = ref(null);
+const viewer3DDivRef = useTemplateRef("viewer3DRef");
+const viewer2DDivRef = useTemplateRef("viewer2DRef");
 
 let viewer3D = null;
 let viewer2D = null;
@@ -107,11 +107,11 @@ onMounted(() => {
 function init() {
   const sharedClock = new Cesium.ClockViewModel();
 
-  viewer3D = createGenericViewer(viewer3DRef.value, {
+  viewer3D = createGenericViewer(viewer3DDivRef.value, {
     clockViewModel: sharedClock,
   });
 
-  viewer2D = createGenericViewer(viewer2DRef.value, {
+  viewer2D = createGenericViewer(viewer2DDivRef.value, {
     clockViewModel: sharedClock,
     sceneMode: Cesium.SceneMode.SCENE2D,
   });
