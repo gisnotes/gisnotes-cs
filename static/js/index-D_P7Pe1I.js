@@ -1,0 +1,1 @@
+import{_ as e,o as c,c as o}from"./index-DLemvPBx.js";const s={},t={class:"gltf-models",ref:"viewerRef"};function n(r,_){return c(),o("div",t,null,512)}const d=e(s,[["render",n],["__scopeId","data-v-1bb437e7"]]);export{d as default};
