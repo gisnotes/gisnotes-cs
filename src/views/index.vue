@@ -7,30 +7,10 @@ import "jsmind/style/jsmind.css";
 import jsMind from "jsmind";
 import { useRouter } from "vue-router";
 import { ElMessageBox, ElMessage } from "element-plus";
+import { NODE_GROUPS, ALL_NODES, STATUS } from "./nodes";
 
 const router = useRouter();
 const jsmindContainerRef = ref(null);
-
-const STATUS = {
-  DONE: undefined, // 已完成背景色为默认即可
-  IN_PROGRESS: "#009B77",
-  PENDING: "#909399",
-};
-
-const VIEW_NODES = [
-  {
-    id: "view2D_1",
-    topic: "Multiple Synced Views",
-    status: STATUS.DONE,
-    route: "/view/multipleSyncedViews",
-  },
-  {
-    id: "view2D_2",
-    topic: "Rotatable 2D Map",
-    status: STATUS.DONE,
-    route: "/view/rotatable2DMap",
-  },
-];
 
 function buildMindData() {
   return {
@@ -39,25 +19,23 @@ function buildMindData() {
     data: {
       id: "root",
       topic: "Cesium示例归类",
-      children: [
-        {
-          id: "view",
-          topic: "二维视图",
-          children: VIEW_NODES.map((n) => ({
-            ...n,
-            "background-color": n.status,
-            clickable: n.status === STATUS.DONE,
-            children: n.children?.map((c) => ({ ...c, clickable: true })),
-          })),
-        },
-      ],
+      children: NODE_GROUPS.map((group) => ({
+        id: group.id,
+        topic: group.topic,
+        children: group.nodes.map((n) => ({
+          ...n,
+          "background-color": n.status,
+          clickable: n.status === STATUS.DONE,
+          children: n.children?.map((c) => ({ ...c, clickable: true })),
+        })),
+      })),
     },
   };
 }
 
 function buildHandlers() {
   const handlers = {};
-  for (const n of VIEW_NODES) {
+  for (const n of ALL_NODES) {
     if (n.route) handlers[n.id] = () => router.push(n.route);
     if (n.children) {
       for (const c of n.children) {
