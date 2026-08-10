@@ -15,6 +15,7 @@ import IndexSourceCode from "./index.vue?raw";
 
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
+import { createViewer } from "@/utils/cesium";
 
 const codeBlocks = ref([
   {
@@ -29,6 +30,7 @@ const viewer2DDivRef = useTemplateRef("viewer2DRef");
 
 let viewer3D = null;
 let viewer2D = null;
+let timer = null;
 
 const sysBaseUrl = import.meta.env.BASE_URL;
 const mode = import.meta.env.MODE;
@@ -38,32 +40,6 @@ window.CESIUM_BASE_URL =
     ? `${sysBaseUrl}${sourceCesiumBaseUrl}`
     : sourceCesiumBaseUrl;
 
-/**
- * 通用的创建 Viewer 方法
- * @param {HTMLElement} container 容器引用
- * @param {Object} options 自定义配置项
- */
-function createGenericViewer(container, options = {}) {
-  return new Cesium.Viewer(container, {
-    geocoder: false,
-    homeButton: false,
-    sceneModePicker: false,
-    baseLayerPicker: false,
-    navigationHelpButton: false,
-    animation: false,
-    timeline: false,
-    fullscreenButton: false,
-    infoBox: false,
-    selectionIndicator: false,
-    shouldAnimate: true,
-    baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-      Cesium.TileMapServiceImageryProvider.fromUrl(
-        Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-      ),
-    ),
-    ...options, // 允许外部覆盖默认配置
-  });
-}
 
 // 联动逻辑函数
 let worldPosition;
@@ -99,7 +75,7 @@ onMounted(() => {
    * 所以需要等待 DOM 元素加载完成后再初始化，
    * 因此这里采用 setTimeout 确保 DOM 元素加载完成
    */
-  setTimeout(() => {
+  timer = setTimeout(() => {
     init();
   }, 0);
 });
@@ -107,11 +83,11 @@ onMounted(() => {
 function init() {
   const sharedClock = new Cesium.ClockViewModel();
 
-  viewer3D = createGenericViewer(viewer3DDivRef.value, {
+  viewer3D = createViewer(viewer3DDivRef.value, {
     clockViewModel: sharedClock,
   });
 
-  viewer2D = createGenericViewer(viewer2DDivRef.value, {
+  viewer2D = createViewer(viewer2DDivRef.value, {
     clockViewModel: sharedClock,
     sceneMode: Cesium.SceneMode.SCENE2D,
   });
@@ -131,6 +107,7 @@ function init() {
 
 // 销毁时解绑事件，防止内存泄漏
 onBeforeUnmount(() => {
+  if (timer) clearTimeout(timer);
   if (viewer3D) {
     viewer3D.camera.changed.removeEventListener(sync2DView);
     viewer3D.destroy();
