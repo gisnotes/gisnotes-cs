@@ -54,8 +54,12 @@ function init() {
   // ------------------------------Box-------------------------------------
   const blueBox = viewer.entities.add({
     name: "蓝色盒子",
+    //position 指定的是 Box 的几何中心点（Center）
     position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
     box: {
+      /**
+       * dimensions:指定立方体在局部坐标系（Local Coordinate System）下的长、宽、高（单位：米）。
+       */
       dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
       material: Cesium.Color.BLUE,
     },
@@ -79,21 +83,24 @@ function init() {
     position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
     box: {
       dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
-      fill: false,
-      outline: true,
+      fill: false,//填充开关 fill:表示是否渲染立方体的表面填充色
+      outline: true,//是否显示边框
       outlineColor: Cesium.Color.YELLOW,
     },
   });
 
-  // ------------------------------Cirle and Ellipse----------------------------------
+  //---------------------------Circle and Ellipse----------------------------------
+  /**
+   * Cesium 中使用 ellipse（椭圆/圆 Graphics） 绘制平面的圆、贴地椭圆以及三维柱体（椭圆柱）
+   */
   const greenCircle = viewer.entities.add({
     name: "带外边框的高空绿色圆",
     show: false,
     position: Cesium.Cartesian3.fromDegrees(-111.0, 40.0, 150000.0),
     ellipse: {
-      semiMinorAxis: 300000.0,
-      semiMajorAxis: 300000.0,
-      height: 200000.0,
+      semiMinorAxis: 300000.0,//短半轴长度
+      semiMajorAxis: 300000.0,//长半轴长度
+      height: 200000.0,//高度
       material: Cesium.Color.GREEN,
       outline: true, // 必须设置 height 才能显示外边框
     },
@@ -117,16 +124,18 @@ function init() {
     ellipse: {
       semiMinorAxis: 150000.0,
       semiMajorAxis: 300000.0,
-      extrudedHeight: 200000.0,
-      rotation: Cesium.Math.toRadians(45),
+      extrudedHeight: 200000.0,//通过拉伸绘制一个三维椭圆柱体
+      rotation: Cesium.Math.toRadians(45),//指定椭圆从正北方向逆时针旋转的角度
       material: Cesium.Color.BLUE.withAlpha(0.5),
       outline: true,
     },
   });
 
   /**
-   * 在 GIS（地理信息系统）和三维可视化中，“Corridor” 本身就是一个专业术语（如：无人机航线走廊、电力巡检走廊、交通廊道）。
+   * 在 GIS（地理信息系统）和三维可视化中，
+   * “Corridor” 本身就是一个专业术语（如：无人机航线走廊、电力巡检走廊、交通廊道）。
    * 在 Cesium 中，它指的是沿着一条折线（Polyline），向两侧按指定宽度（Width）拉伸/扩展形成的带状多边形。
+   * Corridor 适合用来表现道路、航线、管廊等具有实际物理宽度的带状要素。
    */
   // ------------------------------Corridor----------------------------------
   const redCorridor = viewer.entities.add({
@@ -136,6 +145,10 @@ function init() {
       positions: Cesium.Cartesian3.fromDegreesArray([
         -100.0, 40.0, -105.0, 40.0, -105.0, 35.0,
       ]),
+      /**
+       * width：与polyline的width属性的区别是，polyline的width单位是像素，
+       * 而corridor的 width 是真实的地理空间尺寸,单位为米。
+       */ 
       width: 200000.0,
       material: Cesium.Color.RED.withAlpha(0.5),
     },
@@ -150,6 +163,12 @@ function init() {
       ]),
       height: 100000.0,
       width: 200000.0,
+      /**
+       * Cesium.CornerType:
+       * ROUNDED（默认）：圆角过渡，拐弯处平滑。
+       * MITERED：尖角/直角过渡，拐弯处保持锐利延伸。
+       * BEVELED：斜角/切角过渡，拐弯处切掉尖角形成平面。
+       */
       cornerType: Cesium.CornerType.MITERED,
       material: Cesium.Color.GREEN,
       outline: true, // 必须设置 height 才能显示外边框
@@ -177,11 +196,13 @@ function init() {
   const greenCylinder = viewer.entities.add({
     name: "黑边绿色半透明圆柱体",
     show: false,
+    //这里的position指的是圆柱/圆锥几何体的中心点
     position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 200000.0),
     cylinder: {
+      //length（柱体总高度/长度）： 指圆柱/圆锥从底面到顶面的垂直高度
       length: 400000.0,
-      topRadius: 200000.0,
-      bottomRadius: 200000.0,
+      topRadius: 200000.0,//顶面半径
+      bottomRadius: 200000.0,//底面半径
       material: Cesium.Color.GREEN.withAlpha(0.5),
       outline: true,
       outlineColor: Cesium.Color.BLACK,
@@ -201,6 +222,13 @@ function init() {
   });
 
   // --------------------------------partial ellipsoid------------------------------
+  /**
+   * 展示了 Cesium 中 ellipsoid（椭球体 Graphics） 的高级裁剪与形态控制。
+   * Cesium 中的 ellipsoid 远不止用来画普通的球体，通过组合内外半径以及纬向/经向裁剪角，
+   * 它可以构建出环状体、半球圆顶、碗状体、扇形/楔形结构、传感器视场（Sensor Dome）等极具复杂的 3D 几何形态。
+   * 
+   * 关于本小节可以参考我的公众号文章讲解：https://mp.weixin.qq.com/s/_FtU8rdS40hvwksS-o-eaA
+   */
   const saturnPosition = Cesium.Cartesian3.fromDegrees(-95.0, 45.0, 300000.0);
   const saturn = viewer.entities.add({
     name: "土星本体",
@@ -225,7 +253,12 @@ function init() {
       ),
     ),
     ellipsoid: {
+      //radii:控制椭球体在 X、Y、Z 三个轴向上的外半径
       radii: new Cesium.Cartesian3(400000.0, 400000.0, 400000.0),
+      /**
+       * 定义内壁的半径。当设置了 innerRadii 时，
+       * Cesium 会在椭球内部挖掉一个洞，将其变成有厚度的空心壳体（如球壳、碗、管道环等）。
+       */
       innerRadii: new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
       minimumCone: Cesium.Math.toRadians(89.8),
       maximumCone: Cesium.Math.toRadians(90.2),
@@ -352,7 +385,7 @@ function init() {
 
   const wedgePosition = Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0);
   const wedge = viewer.entities.add({
-    name: "契形结构",
+    name: "楔形结构",
     show: false,
     position: wedgePosition,
     orientation: Cesium.Transforms.headingPitchRollQuaternion(
@@ -398,9 +431,19 @@ function init() {
   const bluePlane = viewer.entities.add({
     name: "蓝色平面",
     show: false,
+    // position即为平面的几何中心点
     position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
     plane: {
+      /**
+       * Cesium.Plane(normal, distance)
+       * normal (Cartesian3): 平面的法向量（必须是单位向量）。
+       * distance (Number): 平面到原点的距离（如果法向量是单位向量，这个就是平面在法线方向上的偏移距离）。
+       * 形象理解： 法向量像“光源”的方向，distance 决定了这个平面在光源方向上被“推”了多远。
+       */
       plane: new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0),
+      /**
+       * 平面尺寸:dimensions: new Cesium.Cartesian2(width, height)
+       */
       dimensions: new Cesium.Cartesian2(400000.0, 300000.0),
       material: Cesium.Color.BLUE,
     },
@@ -438,7 +481,77 @@ function init() {
     },
   });
 
+  // -------------------------------------Rectangle----------------------------------------
+  const redRectangle = viewer.entities.add({
+    name: "红色半透明矩形",
+    show: false,
+    rectangle: {
+      /**
+       * Cesium.Rectangle.fromDegrees(west, south, east, north)
+       * 记忆要点： 顺序是 “西、南、东、北”（西经、南纬、东经、北纬），
+       * 即 (最小经度, 最小纬度, 最大经度, 最大纬度)。
+       */
+      coordinates: Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
+      material: Cesium.Color.RED.withAlpha(0.5),
+    },
+  });
+
+  const greenRectangle = viewer.entities.add({
+    name: "黑边高空旋转拉伸绿色矩形",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
+      material: Cesium.Color.GREEN.withAlpha(0.5),
+      rotation: Cesium.Math.toRadians(45),
+      extrudedHeight: 300000.0,//拉伸高度
+      height: 100000.0,//高度
+      outline: true, // 必须设置 height 才能显示外边框
+      outlineColor: Cesium.Color.BLACK,
+    },
+  });
+
+  let rotation = Cesium.Math.toRadians(30);
+
+  function getRotationValue() {
+    rotation += 0.005;
+    return rotation;
+  }
+
+  const rotatingRectangle = viewer.entities.add({
+    name: "动态旋转纹理矩形",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-92.0, 30.0, -76.0, 40.0),
+      material: cesiumLogoUrl, //这里使用一张图片作为纹理材质
+      /**
+       * 动态属性/动画：Cesium.CallbackProperty
+       * 用法： new Cesium.CallbackProperty(callbackFunction, isConstant)
+       * 记忆要点：
+       * 这是 Cesium 中实现每一帧平滑动画/实时数据更新最常用的 API。
+       * 第一个参数是回调函数，返回最新的值（如改变后的弧度）；
+       * 第二个参数 isConstant 传 false，告诉 Cesium 这个属性是动态变化的，需要逐帧重新计算渲染。
+       */
+      rotation: new Cesium.CallbackProperty(getRotationValue, false),//控制几何体旋转
+      stRotation: new Cesium.CallbackProperty(getRotationValue, false),//控制纹理（材质）旋转
+      /**
+       * Cesium.ClassificationType:
+       *  TERRAIN：仅贴合在地形（Terrain）表面。
+       *  CESIUM_3D_TILE：仅贴合在 3D Tiles 模型（如倾斜摄影、城市建筑模型）表面。
+       *  BOTH：同时贴合地形和 3D Tiles。
+       */
+      classificationType: Cesium.ClassificationType.BOTH,
+    },
+  });
+
   //-------------------------------------polygon----------------------------------------
+  /**
+   * - fromDegreesArray([lon1, lat1, lon2, lat2, ...])： 仅包含经纬度，
+   *  适用于贴地多边形或统一抬升高度的多边形。
+   * 
+   * - fromDegreesArrayHeights([lon1, lat1, h1, lon2, lat2, h2, ...])： 
+   *    依次传入[经度, 纬度, 高度]。每个顶点可以指定不同的独立高度，
+   *    是实现倾斜面、起伏墙体、垂直多边形的基础。
+   */
 
   const redPolygon = viewer.entities.add({
     name: "地表红色多边形",
@@ -469,6 +582,11 @@ function init() {
     name: "纹理拉伸多边形",
     show: false,
     polygon: {
+      /**
+       * 当使用 fromDegreesArrayHeights 传入了每个顶点的独立高度后，
+       * 必须将 perPositionHeight 设为 true，Cesium 才会使用顶点自身的高度渲染；
+       * 否则所有顶点会被拉平到同一高度。
+       */
       hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
         -118.4, 40.4, 50000, -118.4, 37, 30000, -114.2, 38.0, 35000, -108.0, 37,
         30000, -108.0, 40.4, 50000,
@@ -546,6 +664,13 @@ function init() {
     },
   });
 
+  /**
+   * 在 Cesium 中，通过构造 hierarchy 对象来实现图形打孔（岛屿/湖泊效果）：
+   * 对象结构： { positions: [...], holes: [...] }
+   * 嵌套镂空： holes 内部还可以继续递归嵌套 holes（如 bluePolygon）。
+   *    - 外层（实心） → 第1层 hole（镂空） → 第2层 hole（实心“回字形”岛屿） → 第3层 hole（镂空），
+   *      Cesium 会自动按奇偶规则计算内外填充区域。
+   */
   const bluePolygon = viewer.entities.add({
     name: "带多孔嵌套蓝色多边形",
     show: false,
@@ -607,6 +732,12 @@ function init() {
       material: Cesium.Color.PURPLE,
       outline: true,
       outlineColor: Cesium.Color.MAGENTA,
+      /**
+       * Cesium.ArcType:
+       *  - GEODESIC（默认）：测地线/大圆航线。在地球曲面上两点间的最短弧线。
+       *  - RHUMB：等角航线（Rhumb Line）。沿着固定罗盘方位角延伸的线。
+       *  - NONE：不沿曲面弯曲，直接用空间直线连接顶点。
+       */
       arcType: Cesium.ArcType.RHUMB,
     },
   });
@@ -620,6 +751,7 @@ function init() {
       positions: Cesium.Cartesian3.fromDegreesArray([-75, 35, -125, 35]),
       width: 5,
       material: Cesium.Color.RED,
+      //clampToGround:开启后，折线会自动贴合地形与三维建筑（3D Tiles）。
       clampToGround: true,
     },
   });
@@ -641,6 +773,12 @@ function init() {
     polyline: {
       positions: Cesium.Cartesian3.fromDegreesArray([-75, 37, -125, 37]),
       width: 10,
+      /**
+       * PolylineGlowMaterialProperty:发光材质：
+       * glowPower（发光强度）： 控制中心发光核心的亮度和发散范围（范围 0.0~1.0）。
+       * taperPower（渐变/收拢系数）： 控制线条从起点到终点宽度或发光的渐变收拢效果。
+       * 常用场景： 科幻风路线、夜间道路、轨迹流光。
+       */
       material: new Cesium.PolylineGlowMaterialProperty({
         glowPower: 0.2,
         taperPower: 0.5,
@@ -657,6 +795,10 @@ function init() {
         -75, 39, 250000, -125, 39, 250000,
       ]),
       width: 5,
+      /**
+       * PolylineOutlineMaterialProperty:描边/双色线材质
+       * outlineWidth & outlineColor： 专门给线条本身再加一层独立宽度的外边框，实现高对比度的双色高空折线。
+       */
       material: new Cesium.PolylineOutlineMaterialProperty({
         color: Cesium.Color.ORANGE,
         outlineWidth: 2,
@@ -674,6 +816,11 @@ function init() {
       ]),
       width: 10,
       arcType: Cesium.ArcType.NONE,
+      /**
+       * PolylineArrowMaterialProperty:方向箭头材质
+       * 会沿着折线的方向（起点 $\rightarrow$ 终点）在末端或线段上自动绘制箭头图标，
+       * 极适合做航线、单行道、矢量流向指示。
+       */
       material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE),
     },
   });
@@ -686,6 +833,9 @@ function init() {
         -75, 45, 500000, -125, 45, 500000,
       ]),
       width: 4,
+      /**
+       * PolylineDashMaterialProperty:虚线材质
+       */
       material: new Cesium.PolylineDashMaterialProperty({
         color: Cesium.Color.CYAN,
       }),
@@ -773,11 +923,178 @@ function init() {
     },
   });
 
-  // 设置 45 度视角与适中视距 2000000 米
+  // ------------------------------PolylineVolume----------------------------------
+  /**
+   * polylineVolume 是 Cesium 中极具特色且功能强大的一种几何体，
+   * 它的核心思想是：定义一个二维截面（shape），沿着一条三维折线路径（positions）进行“扫掠（Sweep/Extrude）”，
+   * 从而拉伸出三维管道或异形梁柱。
+   */
+
+  /**
+   * 计算圆形截面
+   * 通过三角函数 (radius * cos(θ), radius * sin(θ)) 生成 360 个点的环形数组，
+   * 扫掠后得到标准三维圆形管道/水管（如 redTube）。
+   */
+  function computeCircle(radius) {
+    const positions = [];
+    for (let i = 0; i < 360; i++) {
+      const radians = Cesium.Math.toRadians(i);
+      positions.push(
+        new Cesium.Cartesian2(
+          radius * Math.cos(radians),
+          radius * Math.sin(radians),
+        ),
+      );
+    }
+    return positions;
+  }
+
+  /**
+   * 计算星形截面
+   * 通过交替半径（内外圆半径 rOuter / rInner）计算多角星形顶点，
+   * 扫掠后得到星形截面的复杂异形柱体（如 blueStar）。
+   */
+  function computeStar(arms, rOuter, rInner) {
+    const angle = Math.PI / arms;
+    const length = 2 * arms;
+    const positions = new Array(length);
+    for (let i = 0; i < length; i++) {
+      const r = i % 2 === 0 ? rOuter : rInner;
+      positions[i] = new Cesium.Cartesian2(
+        Math.cos(i * angle) * r,
+        Math.sin(i * angle) * r,
+      );
+    }
+    return positions;
+  }
+
+  const redTube = viewer.entities.add({
+    name: "红色管道圆角柱体",
+    show: false,
+    polylineVolume: {
+      //positions:决定管道/体的走向路线
+      positions: Cesium.Cartesian3.fromDegreesArray([
+        -85.0, 32.0, -85.0, 36.0, -89.0, 36.0,
+      ]),
+      // shape:决定管道切面的形状,它是一个二维截面数组
+      shape: computeCircle(60000.0),
+      material: Cesium.Color.RED,
+    },
+  });
+
+  const greenBox = viewer.entities.add({
+    name: "绿色方形斜角带边框柱体",
+    show: false,
+    polylineVolume: {
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        -90.0, 32.0, 0.0, -90.0, 36.0, 100000.0, -94.0, 36.0, 0.0,
+      ]),
+      shape: [
+        new Cesium.Cartesian2(-50000, -50000),
+        new Cesium.Cartesian2(50000, -50000),
+        new Cesium.Cartesian2(50000, 50000),
+        new Cesium.Cartesian2(-50000, 50000),
+      ],
+      cornerType: Cesium.CornerType.BEVELED,
+      material: Cesium.Color.GREEN.withAlpha(0.5),
+      outline: true,
+      outlineColor: Cesium.Color.BLACK,
+    },
+  });
+
+  const blueStar = viewer.entities.add({
+    name: "蓝色星形尖角柱体",
+    show: false,
+    polylineVolume: {
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        -95.0, 32.0, 0.0, -95.0, 36.0, 100000.0, -99.0, 36.0, 200000.0,
+      ]),
+      shape: computeStar(7, 70000, 50000),
+      cornerType: Cesium.CornerType.MITERED,
+      material: Cesium.Color.BLUE,
+    },
+  });
+
+  // -------------------------------------Wall----------------------------------------
+  /**
+   * wall 在 Cesium 中专门用于沿一条折线路径在垂直方向上拉伸出一条“三维墙面/垂直幕墙”，
+   * 非常适合用来制作城墙、围栏、垂直切割面、高空边界屏障、动态流动墙特效等。
+   * 
+   * 墙体在垂直方向上的形态由两个数组共同决定，这两个数组必须与路径顶点（positions）的数量一一对应：
+   * maximumHeights（顶部高度数组）： 定义每个控制点处墙体顶边缘的绝对高程（单位：米）。
+   * minimumHeights（底部高度数组）： 定义每个控制点处墙体底边缘的绝对高程（单位：米）。
+   * 如果不设置，底部默认紧贴地表（高程为 0）。
+   * 
+   * 假设你沿着地面画了 3 个点（A、B、C），这 3 个点连成一条折线：
+   *   - maximumHeights: [Max[0], Max[1], Max[2]]：依次指定 A、B、C 三个点上方墙顶的高度。
+   *   - minimumHeights: [Min[0], Min[1], Min[2]]：依次指定 A、B、C 三个点上方墙底的高度。
+   *   - 墙体立面 = 在同一个经纬度点上，由minimumHeights[i]向上拉伸到maximumHeights[i]。
+   *   - 数组长度必须等于坐标点个数。
+   *   - maximumHeights[i] 必须大于 minimumHeights[i]，否则墙体高度为 0，就会无法显示。
+   * 
+   *   
+   *  
+   * 【顶部】  Max[0] ───★──────────────★ Max[1]─────────────★ Max[2]
+   *              │              │                     │
+   *              │  墙 体 面 积 │    墙 体 面 积      │  (渲染出颜色的区域)
+   *              │              │                     │
+   * 【底部】  Min[0] ───★──────────────★ Min[1]─────────────★ Min[2]
+   *              │              │                     │
+   *              │  (下方是空的)│    (下方是空的)     │
+   * 地表 ────────┴──────────────┴─────────────────────┴──── (海平面 0 米)
+   *            点 A            点 B                  点 C
+   */
+  const redWall = viewer.entities.add({
+    name: "高空红色墙体",
+    show: false,
+    wall: {
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        -115.0, 44.0, 200000.0, -90.0, 44.0, 200000.0,
+      ]),
+      minimumHeights: [100000.0, 100000.0],
+      material: Cesium.Color.RED,
+    },
+  });
+
+  const greenWall = viewer.entities.add({
+    name: "带边框地表绿色墙体",
+    show: false,
+    wall: {
+      //坐标点首尾相连:闭合墙体与环形围栏
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        -107.0, 43.0, 100000.0, -97.0, 43.0, 100000.0, -97.0, 40.0, 100000.0,
+        -107.0, 40.0, 100000.0, -107.0, 43.0, 100000.0,
+      ]),
+      material: Cesium.Color.GREEN,
+      outline: true,
+    },
+  });
+
+  const blueWall = viewer.entities.add({
+    name: "锯齿起伏黑边蓝色半透明墙体",
+    show: false,
+    wall: {
+      positions: Cesium.Cartesian3.fromDegreesArray([
+        -115.0, 50.0, -112.5, 50.0, -110.0, 50.0, -107.5, 50.0, -105.0, 50.0,
+        -102.5, 50.0, -100.0, 50.0, -97.5, 50.0, -95.0, 50.0, -92.5, 50.0, -90.0,
+        50.0,
+      ]),
+      maximumHeights: [
+        100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000,
+        200000, 100000,
+      ],
+      minimumHeights: [0, 100000, 0, 100000, 0, 100000, 0, 100000, 0, 100000, 0],
+      material: Cesium.Color.BLUE.withAlpha(0.5),
+      outline: true,
+      outlineColor: Cesium.Color.BLACK,
+    },
+  });
+
+  // 设置 45 度视角与适中视距 3000000 米
   const defaultOffset = new Cesium.HeadingPitchRange(
-    0.0,
+    Cesium.Math.toRadians(30.0),
     Cesium.Math.toRadians(-45.0),
-    2000000.0,
+    3000000.0,
   );
 
   blueBox.show = true;
@@ -812,6 +1129,9 @@ function init() {
       bluePlane,
       redPlane,
       yellowPlaneOutline,
+      redRectangle,
+      greenRectangle,
+      rotatingRectangle,
       redPolygon,
       greenPolygon,
       texturedPolygon,
@@ -831,6 +1151,12 @@ function init() {
       orangeShortDashLine,
       cyanPatternDashedLine,
       yellowPatternDashedLine,
+      redTube,
+      greenBox,
+      blueStar,
+      redWall,
+      greenWall,
+      blueWall,
     },
     defaultOffset,
   );
@@ -877,6 +1203,10 @@ function initGUI(entities, defaultOffset) {
     bluePlane: false,
     redPlane: false,
     yellowPlaneOutline: false,
+    // 矩形
+    redRectangle: false,
+    greenRectangle: false,
+    rotatingRectangle: false,
     // 多边形
     redPolygon: false,
     greenPolygon: false,
@@ -898,6 +1228,14 @@ function initGUI(entities, defaultOffset) {
     orangeShortDashLine: false,
     cyanPatternDashedLine: false,
     yellowPatternDashedLine: false,
+    // 管道体积体
+    redTube: false,
+    greenBox: false,
+    blueStar: false,
+    // 墙体
+    redWall: false,
+    greenWall: false,
+    blueWall: false,
   };
 
   const handleToggle = (entity, val) => {
@@ -1024,6 +1362,20 @@ function initGUI(entities, defaultOffset) {
     .name("黄色线框平面")
     .onChange((val) => handleToggle(entities.yellowPlaneOutline, val));
 
+  const rectangleFolder = gui.addFolder("矩形 (Rectangle)");
+  rectangleFolder
+    .add(controls, "redRectangle")
+    .name("红色半透明矩形")
+    .onChange((val) => handleToggle(entities.redRectangle, val));
+  rectangleFolder
+    .add(controls, "greenRectangle")
+    .name("高空旋转拉伸绿色矩形")
+    .onChange((val) => handleToggle(entities.greenRectangle, val));
+  rectangleFolder
+    .add(controls, "rotatingRectangle")
+    .name("动态旋转纹理矩形")
+    .onChange((val) => handleToggle(entities.rotatingRectangle, val));
+
   const polygonFolder = gui.addFolder("多边形 (Polygon)");
   polygonFolder
     .add(controls, "redPolygon")
@@ -1105,6 +1457,34 @@ function initGUI(entities, defaultOffset) {
     .add(controls, "yellowPatternDashedLine")
     .name("自定点划模式黄色虚线")
     .onChange((val) => handleToggle(entities.yellowPatternDashedLine, val));
+
+  const polylineVolumeFolder = gui.addFolder("管道体积体 (PolylineVolume)");
+  polylineVolumeFolder
+    .add(controls, "redTube")
+    .name("红色管道圆角柱体")
+    .onChange((val) => handleToggle(entities.redTube, val));
+  polylineVolumeFolder
+    .add(controls, "greenBox")
+    .name("绿色方形斜角柱体")
+    .onChange((val) => handleToggle(entities.greenBox, val));
+  polylineVolumeFolder
+    .add(controls, "blueStar")
+    .name("蓝色星形尖角柱体")
+    .onChange((val) => handleToggle(entities.blueStar, val));
+
+  const wallFolder = gui.addFolder("墙体 (Wall)");
+  wallFolder
+    .add(controls, "redWall")
+    .name("高空红色墙体")
+    .onChange((val) => handleToggle(entities.redWall, val));
+  wallFolder
+    .add(controls, "greenWall")
+    .name("带边框绿色墙体")
+    .onChange((val) => handleToggle(entities.greenWall, val));
+  wallFolder
+    .add(controls, "blueWall")
+    .name("锯齿起伏蓝色墙体")
+    .onChange((val) => handleToggle(entities.blueWall, val));
 }
 
 onBeforeUnmount(() => {
