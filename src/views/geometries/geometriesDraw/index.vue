@@ -7,6 +7,7 @@
 <script setup name="GeometriesDraw">
 import DemoBox from "@/components/DemoBox/index.vue";
 import IndexSourceCode from "./index.vue?raw";
+import CesiumSourceCode from "@/utils/cesium.js?raw";
 import cesiumLogoUrl from "@/assets/images/demo/images/Cesium_Logo_Color.jpg";
 
 import Cesium from "cesium";
@@ -29,6 +30,11 @@ const codeBlocks = ref([
     fileName: "@/views/geometries/geometriesDraw/index.vue",
     rawCode: IndexSourceCode,
     language: "html",
+  },
+  {
+    fileName: "@/utils/cesium.js",
+    rawCode: CesiumSourceCode,
+    language: "javascript",
   },
 ]);
 

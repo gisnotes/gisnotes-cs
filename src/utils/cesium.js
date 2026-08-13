@@ -75,7 +75,7 @@ export function supportsMaterialsForEntitiesOnTerrain(scene) {
 }
 
 /**
- * 计算已知地理坐标的对跖点（Antipodal Point，地心对称点）
+ * 计算已知地理坐标的对跖(zhí)点（Antipodal Point，地心对称点）
  * @param {Cesium.Cartographic} cartographic - 输入位置（弧度）
  * @returns {Cesium.Cartographic} 对跖点地理坐标
  */
