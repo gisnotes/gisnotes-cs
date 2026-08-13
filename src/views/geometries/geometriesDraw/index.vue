@@ -11,7 +11,17 @@ import cesiumLogoUrl from "@/assets/images/demo/images/Cesium_Logo_Color.jpg";
 
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
-import { createViewer } from "@/utils/cesium";
+import {
+  createViewer,
+  optimizeViewerQuality,
+  supportsPolylinesOnTerrain,
+  supportsMaterialsForEntitiesOnTerrain,
+  calculateAntipode,
+  createRhumbParallel,
+  createRhumbMeridian,
+  createCoordinateLabel,
+  createRhumbGrid,
+} from "@/utils/cesium";
 import MyDatGUI from "@/utils/datGUI";
 
 const codeBlocks = ref([
@@ -27,6 +37,7 @@ const viewerDivRef = useTemplateRef("viewerRef");
 let viewer = null;
 let timer = null;
 let gui = null;
+let handler = null;
 
 onMounted(() => {
   timer = setTimeout(() => {
@@ -43,13 +54,7 @@ function init() {
    * 2. msaaSamples: 开启 WebGL2 硬件级多重采样抗锯齿 (MSAA 4x)
    * 3. fxaa: 开启屏幕后处理快速近似抗锯齿，极大平滑实体边缘与折线
    */
-  viewer.resolutionScale = window.devicePixelRatio || 1.0;
-  if (viewer.scene.msaaSamples !== undefined) {
-    viewer.scene.msaaSamples = 4;
-  }
-  if (viewer.scene.postProcessStages && viewer.scene.postProcessStages.fxaa) {
-    viewer.scene.postProcessStages.fxaa.enabled = true;
-  }
+  optimizeViewerQuality(viewer, { msaaSamples: 4, enableFxaa: true });
 
   // ------------------------------Box-------------------------------------
   const blueBox = viewer.entities.add({
@@ -1090,6 +1095,198 @@ function init() {
     },
   });
 
+  // ------------------------------Z-Index (贴地形图元层级顺序)----------------------------------
+  /**
+   * Z-Index (层级控制示例):
+   * Cesium 支持为贴地 Entity (如 Rectangle, Polygon) 和贴地折线 (Polyline clampToGround: true) 指定 zIndex。
+   * zIndex 决定了当多个贴地图元在同一地表位置相互重叠时的渲染层级顺序（值越大越靠上覆盖）。
+   * 
+   * 下面的代码展示了在 Cesium 中使用 zIndex 属性控制贴地矢量要素（Clamped / Ground Entities）之间
+   * 渲染叠加层级（层叠顺序）的核心用法。
+   * 
+   * 有效对象：
+   * - 没有设置 height 和 extrudedHeight 的贴地多边形/矩形（如代码中的 rectangle）。
+   * - 显式开启了 clampToGround: true 的贴地折线（如代码中的 polyline）。
+   * 
+   * 失效情况：
+   * - 如果给 rectangle 设置了 height: 100（变成了悬空 3D 实体），
+   *   Cesium 会转为基于深度缓冲区（Z-Buffer / Depth Test）的真实 3D 空间遮挡计算，
+   *   此时 zIndex 属性将被直接忽略。
+   */
+  if (!supportsPolylinesOnTerrain(viewer.scene)) {
+    //检测当前设备的 WebGL 是否支持在地形上绘制贴地折线
+    console.warn(
+      "当前平台不支持地表贴地折线 Z-Index，该属性将被忽略",
+    );
+  }
+
+  if (!supportsMaterialsForEntitiesOnTerrain(viewer.scene)) {
+    //检测当前设备是否支持在地形多边形上渲染材质贴图/纹理
+    console.warn(
+      "当前平台不支持地表贴图多边形材质 Z-Index，该属性将被忽略",
+    );
+  }
+
+  const zIndexRedRect1 = viewer.entities.add({
+    name: "红色矩形 (zIndex 1)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-110.0, 20.0, -100.5, 30.0),
+      material: Cesium.Color.RED,
+      zIndex: 1,
+    },
+  });
+
+  const zIndexTexturedRect2 = viewer.entities.add({
+    name: "纹理矩形 (zIndex 2)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-112.0, 25.0, -102.5, 35.0),
+      material: cesiumLogoUrl,
+      zIndex: 2,
+    },
+  });
+
+  const zIndexBlueRect3 = viewer.entities.add({
+    name: "蓝色矩形 (zIndex 3)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-110.0, 31.0, -100.5, 41.0),
+      material: Cesium.Color.BLUE,
+      zIndex: 3,
+    },
+  });
+
+  const zIndexTexturedRect3 = viewer.entities.add({
+    name: "右侧纹理矩形 (zIndex 3)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-99.5, 20.0, -90.0, 30.0),
+      material: cesiumLogoUrl,
+      zIndex: 3,
+    },
+  });
+
+  const zIndexGreenRect2 = viewer.entities.add({
+    name: "右侧绿色矩形 (zIndex 2)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-97.5, 25.0, -88.0, 35.0),
+      material: Cesium.Color.GREEN,
+      zIndex: 2,
+    },
+  });
+
+  const zIndexBlueRect1 = viewer.entities.add({
+    name: "右侧蓝色矩形 (zIndex 1)",
+    show: false,
+    rectangle: {
+      coordinates: Cesium.Rectangle.fromDegrees(-99.5, 31.0, -90.0, 41.0),
+      material: Cesium.Color.BLUE,
+      zIndex: 1,
+    },
+  });
+
+  const zIndexPolyline2 = viewer.entities.add({
+    name: "贴地发光蓝色折线 (zIndex 2)",
+    show: false,
+    polyline: {
+      positions: Cesium.Cartesian3.fromDegreesArray([-120.0, 22.0, -80.0, 22.0]),
+      width: 8.0,
+      material: new Cesium.PolylineGlowMaterialProperty({
+        glowPower: 0.2,
+        color: Cesium.Color.BLUE,
+      }),
+      zIndex: 2,
+      clampToGround: true,
+    },
+  });
+
+  // ------------------------------Rhumb Lines & Crosshairs Grid (等角航线与经纬网)----------------------------------
+  /**
+   * 等角航线 (Rhumb Line / Loxodrome):
+   * 沿着固定罗盘方位角（Heading）延伸的线。
+   * 在 Cesium 中使用 `arcType: Cesium.ArcType.RHUMB` 来绘制。
+   * 通用提取函数来自于 @/utils/cesium。
+   */
+  let showAntipodalPoint = false;
+  let enableCrosshairClick = false;
+
+  const rhumbGridPrimitives = {
+    equator: createRhumbParallel(viewer, 0, { color: Cesium.Color.BLUE }),
+    primeMeridian: createRhumbMeridian(viewer, 0, { color: Cesium.Color.BLUE }),
+    selectedPoint: {
+      meridian: undefined,
+      parallel: undefined,
+      label: undefined,
+    },
+    antipodalPoint: {
+      meridian: undefined,
+      parallel: undefined,
+      label: undefined,
+    },
+    lowResolutionGrid: createRhumbGrid(viewer, 2, Cesium.Color.PALEGREEN, false),
+    higherResolutionGrid: createRhumbGrid(viewer, 5, Cesium.Color.DARKORANGE, false),
+  };
+
+  function updateCrosshairs(cartographic) {
+    const selectedPoint = rhumbGridPrimitives.selectedPoint;
+    const antipodalPoint = rhumbGridPrimitives.antipodalPoint;
+    if (Cesium.defined(selectedPoint.parallel)) {
+      viewer.entities.remove(selectedPoint.parallel);
+      viewer.entities.remove(selectedPoint.meridian);
+      viewer.entities.remove(selectedPoint.label);
+      viewer.entities.remove(antipodalPoint.parallel);
+      viewer.entities.remove(antipodalPoint.meridian);
+      viewer.entities.remove(antipodalPoint.label);
+    }
+
+    const pointLatitude = Cesium.Math.toDegrees(cartographic.latitude);
+    const pointLongitude = Cesium.Math.toDegrees(cartographic.longitude);
+    const finerGranularity = 0.001;
+
+    selectedPoint.parallel = createRhumbParallel(viewer, pointLatitude, {
+      color: Cesium.Color.RED,
+      granularity: finerGranularity,
+      show: true,
+    });
+    selectedPoint.meridian = createRhumbMeridian(viewer, pointLongitude, {
+      color: Cesium.Color.RED,
+      granularity: finerGranularity,
+      show: true,
+    });
+    selectedPoint.label = createCoordinateLabel(viewer, cartographic);
+
+    const antipodeCartographic = calculateAntipode(cartographic);
+    const antipodeLatitude = Cesium.Math.toDegrees(antipodeCartographic.latitude);
+    const antipodeLongitude = Cesium.Math.toDegrees(antipodeCartographic.longitude);
+
+    antipodalPoint.parallel = createRhumbParallel(viewer, antipodeLatitude, {
+      color: Cesium.Color.CYAN,
+      granularity: finerGranularity,
+      show: showAntipodalPoint,
+    });
+    antipodalPoint.meridian = createRhumbMeridian(viewer, antipodeLongitude, {
+      color: Cesium.Color.CYAN,
+      granularity: finerGranularity,
+      show: showAntipodalPoint,
+    });
+    antipodalPoint.label = createCoordinateLabel(viewer, antipodeCartographic);
+    antipodalPoint.label.show = showAntipodalPoint;
+  }
+
+  // 鼠标左键点击地球拾取并更新等角航线十字线
+  handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction(function (click) {
+    if (!enableCrosshairClick) return;
+    const ray = viewer.camera.getPickRay(click.position);
+    const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+    if (!Cesium.defined(cartesian)) return;
+
+    const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+    updateCrosshairs(cartographic);
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
   // 设置 45 度视角与适中视距 3000000 米
   const defaultOffset = new Cesium.HeadingPitchRange(
     Cesium.Math.toRadians(30.0),
@@ -1157,6 +1354,26 @@ function init() {
       redWall,
       greenWall,
       blueWall,
+      zIndexRedRect1,
+      zIndexTexturedRect2,
+      zIndexBlueRect3,
+      zIndexTexturedRect3,
+      zIndexGreenRect2,
+      zIndexBlueRect1,
+      zIndexPolyline2,
+      rhumbGridPrimitives,
+      onToggleCrosshairClick: (val) => {
+        enableCrosshairClick = val;
+      },
+      onToggleAntipodalPoint: (val) => {
+        showAntipodalPoint = val;
+        const antipodalPoint = rhumbGridPrimitives.antipodalPoint;
+        if (Cesium.defined(antipodalPoint.parallel)) {
+          antipodalPoint.parallel.show = showAntipodalPoint;
+          antipodalPoint.meridian.show = showAntipodalPoint;
+          antipodalPoint.label.show = showAntipodalPoint;
+        }
+      },
     },
     defaultOffset,
   );
@@ -1236,6 +1453,22 @@ function initGUI(entities, defaultOffset) {
     redWall: false,
     greenWall: false,
     blueWall: false,
+    // 贴地层级 Z-Index
+    zIndexAll: false,
+    zIndexRedRect1: false,
+    zIndexTexturedRect2: false,
+    zIndexBlueRect3: false,
+    zIndexTexturedRect3: false,
+    zIndexGreenRect2: false,
+    zIndexBlueRect1: false,
+    zIndexPolyline2: false,
+    // 等角航线与经纬网
+    equator: false,
+    primeMeridian: false,
+    lowResolutionGrid: false,
+    higherResolutionGrid: false,
+    enableCrosshairClick: false,
+    showAntipodalPoint: false,
   };
 
   const handleToggle = (entity, val) => {
@@ -1485,10 +1718,123 @@ function initGUI(entities, defaultOffset) {
     .add(controls, "blueWall")
     .name("锯齿起伏蓝色墙体")
     .onChange((val) => handleToggle(entities.blueWall, val));
+
+  const zIndexFolder = gui.addFolder("贴地层级 (Z-Index)");
+  const zIndexEntitiesList = [
+    entities.zIndexRedRect1,
+    entities.zIndexTexturedRect2,
+    entities.zIndexBlueRect3,
+    entities.zIndexTexturedRect3,
+    entities.zIndexGreenRect2,
+    entities.zIndexBlueRect1,
+    entities.zIndexPolyline2,
+  ];
+
+  zIndexFolder
+    .add(controls, "zIndexAll")
+    .name("一键展示全部 Z-Index 示例")
+    .onChange((val) => {
+      zIndexEntitiesList.forEach((e) => (e.show = val));
+      controls.zIndexRedRect1 = val;
+      controls.zIndexTexturedRect2 = val;
+      controls.zIndexBlueRect3 = val;
+      controls.zIndexTexturedRect3 = val;
+      controls.zIndexGreenRect2 = val;
+      controls.zIndexBlueRect1 = val;
+      controls.zIndexPolyline2 = val;
+      gui.updateDisplay();
+      if (val) {
+        viewer.zoomTo(zIndexEntitiesList, defaultOffset);
+      }
+    });
+
+  zIndexFolder
+    .add(controls, "zIndexRedRect1")
+    .name("红色矩形 (zIndex 1)")
+    .onChange((val) => handleToggle(entities.zIndexRedRect1, val));
+  zIndexFolder
+    .add(controls, "zIndexTexturedRect2")
+    .name("纹理矩形 (zIndex 2)")
+    .onChange((val) => handleToggle(entities.zIndexTexturedRect2, val));
+  zIndexFolder
+    .add(controls, "zIndexBlueRect3")
+    .name("蓝色矩形 (zIndex 3)")
+    .onChange((val) => handleToggle(entities.zIndexBlueRect3, val));
+  zIndexFolder
+    .add(controls, "zIndexTexturedRect3")
+    .name("右侧纹理矩形 (zIndex 3)")
+    .onChange((val) => handleToggle(entities.zIndexTexturedRect3, val));
+  zIndexFolder
+    .add(controls, "zIndexGreenRect2")
+    .name("右侧绿色矩形 (zIndex 2)")
+    .onChange((val) => handleToggle(entities.zIndexGreenRect2, val));
+  zIndexFolder
+    .add(controls, "zIndexBlueRect1")
+    .name("右侧蓝色矩形 (zIndex 1)")
+    .onChange((val) => handleToggle(entities.zIndexBlueRect1, val));
+  zIndexFolder
+    .add(controls, "zIndexPolyline2")
+    .name("贴地发光蓝色折线 (zIndex 2)")
+    .onChange((val) => handleToggle(entities.zIndexPolyline2, val));
+
+  const rhumbGridFolder = gui.addFolder("等角航线与经纬网 (Rhumb Lines & Grid)");
+  rhumbGridFolder
+    .add(controls, "equator")
+    .name("赤道 (Equator)")
+    .onChange((val) => {
+      if (entities.rhumbGridPrimitives) {
+        entities.rhumbGridPrimitives.equator.show = val;
+      }
+    });
+  rhumbGridFolder
+    .add(controls, "primeMeridian")
+    .name("本初子午线 (Prime Meridian)")
+    .onChange((val) => {
+      if (entities.rhumbGridPrimitives) {
+        entities.rhumbGridPrimitives.primeMeridian.show = val;
+      }
+    });
+  rhumbGridFolder
+    .add(controls, "lowResolutionGrid")
+    .name("低分辨率经纬网 (Low Res)")
+    .onChange((val) => {
+      if (entities.rhumbGridPrimitives) {
+        entities.rhumbGridPrimitives.lowResolutionGrid.forEach(
+          (line) => (line.show = val),
+        );
+      }
+    });
+  rhumbGridFolder
+    .add(controls, "higherResolutionGrid")
+    .name("高分辨率经纬网 (High Res)")
+    .onChange((val) => {
+      if (entities.rhumbGridPrimitives) {
+        entities.rhumbGridPrimitives.higherResolutionGrid.forEach(
+          (line) => (line.show = val),
+        );
+      }
+    });
+  rhumbGridFolder
+    .add(controls, "enableCrosshairClick")
+    .name("开启点击生成十字线")
+    .onChange((val) => {
+      if (entities.onToggleCrosshairClick) {
+        entities.onToggleCrosshairClick(val);
+      }
+    });
+  rhumbGridFolder
+    .add(controls, "showAntipodalPoint")
+    .name("显示点选对跖点 (Antipodal)")
+    .onChange((val) => {
+      if (entities.onToggleAntipodalPoint) {
+        entities.onToggleAntipodalPoint(val);
+      }
+    });
 }
 
 onBeforeUnmount(() => {
   if (timer) clearTimeout(timer);
+  if (handler) handler.destroy();
   if (gui) gui.destroy();
   if (viewer) viewer.destroy();
 });
