@@ -25,6 +25,13 @@ export const LOCAL_ROUTES = [
         hidden: false,
         meta: { title: "可旋转的二维地图", icon: "2dmap", roles: ["admin"] },
       },
+      {
+        path: "eagleEye",
+        component: "view/eagleEye/index",
+        name: "EagleEye",
+        hidden: false,
+        meta: { title: "鹰眼", icon: "鹰眼视图", roles: ["admin"] },
+      },
     ],
   },
   // {
