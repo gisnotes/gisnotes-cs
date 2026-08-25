@@ -89,7 +89,30 @@ function updateTilesetHeight(height) {
   );
 
   // 4. 将平移变换矩阵赋值给 tileset.modelMatrix
-  tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+  //
+  // 【底层数学原理与 4x4 平移变换矩阵】：
+  //
+  //   [目标位置]            [平移矩阵 (4x4)]            [原始位置]
+  //   ┌   ┐          ┌                      ┐          ┌   ┐
+  //   │ x'│          │  1.0   0.0   0.0   Tx│          │ x │   => x' = x + Tx
+  //   │ y'│    =     │  0.0   1.0   0.0   Ty│    ×     │ y │   => y' = y + Ty
+  //   │ z'│          │  0.0   0.0   1.0   Tz│          │ z │   => z' = z + Tz
+  //   │ 1 │          │  0.0   0.0   0.0  1.0│          │ 1 │   => 1' = 1
+  //   └   ┘          └                      ┘          └   ┘
+  //                   第1列  第2列  第3列  第4列 (WebGL 列主序展开)
+  //
+  // 方法一：通过 4x4 列主序一维数组直接构造平移矩阵（底层原理）
+  const m = Cesium.Matrix4.fromArray([
+    1.0, 0.0, 0.0, 0.0, // 第 1 列 (X 轴)
+    0.0, 1.0, 0.0, 0.0, // 第 2 列 (Y 轴)
+    0.0, 0.0, 1.0, 0.0, // 第 3 列 (Z 轴)
+    translation.x, translation.y, translation.z, 1.0, // 第 4 列 (平移分量 Tx, Ty, Tz, 1.0)
+  ]);
+  tileset.modelMatrix = m;
+
+  // 方法二：使用 Cesium 内置 API Matrix4.fromTranslation 快捷生成
+  // tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
 }
 
 async function init() {

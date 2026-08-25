@@ -86,6 +86,13 @@ export const LOCAL_ROUTES = [
         hidden: false,
         meta: { title: "调整模型高度", icon: "build", roles: ["admin"] },
       },
+      {
+        path: "adjustPositionAndScale",
+        component: "3dtile/adjustPositionAndScale/index",
+        name: "AdjustPositionAndScale",
+        hidden: false,
+        meta: { title: "改变模型位置旋转及缩放", icon: "build", roles: ["admin"] },
+      },
     ],
   },
 ];

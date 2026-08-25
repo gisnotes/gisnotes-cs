@@ -7,14 +7,14 @@
 <script setup name="GeometriesDraw">
 import DemoBox from "@/components/DemoBox/index.vue";
 import IndexSourceCode from "./index.vue?raw";
+import UtilsSourceCode from "./utils.js?raw";
 import CesiumSourceCode from "@/utils/cesium.js?raw";
 const cesiumLogoUrl = "/Sandcastle2/images/Cesium_Logo_Color.jpg";
 
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
+import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
 import {
-  createViewer,
-  optimizeViewerQuality,
   supportsPolylinesOnTerrain,
   supportsMaterialsForEntitiesOnTerrain,
   calculateAntipode,
@@ -22,7 +22,7 @@ import {
   createRhumbMeridian,
   createCoordinateLabel,
   createRhumbGrid,
-} from "@/utils/cesium";
+} from "./utils.js";
 import MyDatGUI from "@/utils/datGUI";
 
 const codeBlocks = ref([
@@ -30,6 +30,11 @@ const codeBlocks = ref([
     fileName: "@/views/geometries/geometriesDraw/index.vue",
     rawCode: IndexSourceCode,
     language: "html",
+  },
+  {
+    fileName: "@/views/geometries/geometriesDraw/utils.js",
+    rawCode: UtilsSourceCode,
+    language: "javascript",
   },
   {
     fileName: "@/utils/cesium.js",
