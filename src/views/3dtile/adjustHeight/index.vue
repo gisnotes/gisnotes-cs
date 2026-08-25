@@ -130,7 +130,7 @@ async function init() {
   // 4. 异步加载 3D Tileset 模型
   try {
     tileset = await Cesium.Cesium3DTileset.fromUrl(
-      "/SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+      `${import.meta.env.BASE_URL}SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`,
     );
 
     viewer.scene.primitives.add(tileset);

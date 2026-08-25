@@ -9,7 +9,7 @@ import DemoBox from "@/components/DemoBox/index.vue";
 import IndexSourceCode from "./index.vue?raw";
 import UtilsSourceCode from "./utils.js?raw";
 import CesiumSourceCode from "@/utils/cesium.js?raw";
-const cesiumLogoUrl = "/Sandcastle2/images/Cesium_Logo_Color.jpg";
+const cesiumLogoUrl = `${import.meta.env.BASE_URL}Sandcastle2/images/Cesium_Logo_Color.jpg`;
 
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
@@ -1391,7 +1391,7 @@ function init() {
 }
 
 function initGUI(entities, defaultOffset) {
-  gui = new MyDatGUI();
+  gui = new MyDatGUI({width: 230, labelWidth: 0.7});
   gui.modifyPosition(viewerDivRef.value, {
     position: "absolute",
     top: "6px",

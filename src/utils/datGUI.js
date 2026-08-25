@@ -7,48 +7,66 @@ dat.GUI.TEXT_OPEN = "展开控件";
 class MyDatGUI extends dat.GUI {
   constructor(options = {}) {
     // 默认关闭 autoPlace，避免 dat.GUI 自动在 document.body 创建 fixed 高层级悬浮容器覆盖顶栏 TagsView 及右键菜单
-    // 设置 width 默认为 275（原始默认 245），稍微加宽以适度容纳长名称
-    const customOptions = {
-      autoPlace: false,
-      width: 275,
-      ...options,
-    };
-    super(customOptions);
-    this.setLocale();
+    // 设置 width 默认为 275（原始默认 245），适度加宽容纳名称；支持传入 labelWidth 动态指定标签宽度
+    const {
+      labelWidth = "50%",
+      propertyNameWidth,
+      autoPlace = false,
+      width = 275,
+      ...restOptions
+    } = options;
+
+    super({
+      autoPlace,
+      width,
+      ...restOptions,
+    });
+
     this.injectCustomStyles();
+    this.setLabelWidth(propertyNameWidth || labelWidth);
+    this.setLocale();
     this.enableTooltips();
   }
 
   /**
-   * 注入自定义样式，适度提升长名称文本的宽度占比并防止截断
+   * 动态设置当前 GUI 面板所有表单标签（property-name）的宽度
+   * @param {number|string} width - 支持数字（像素如 120 或比例如 0.6）、带单位字符串（如 '140px'、'60%'）
+   * @returns {MyDatGUI} 当前实例
+   */
+  setLabelWidth(width) {
+    if (typeof width === "number") {
+      width = width > 0 && width <= 1 ? `${width * 100}%` : `${width}px`;
+    }
+    if (this.domElement && width) {
+      this.domElement.style.setProperty("--dg-label-width", width);
+    }
+    return this;
+  }
+
+  /**
+   * 注入自定义全局样式，通过 CSS 变量 --dg-label-width 动态适配不同实例的 label 宽度
    */
   injectCustomStyles() {
     if (document.getElementById("my-dat-gui-custom-style")) return;
     const style = document.createElement("style");
     style.id = "my-dat-gui-custom-style";
     style.textContent = `
-      /* 优化 dat.GUI 标签与复选框间距 */
+      /* 优化 dat.GUI 标签与控件间距，支持通过 CSS 变量 --dg-label-width 动态定制各实例宽度 */
       .dg .cr .property-name {
-        width: 60% !important;
+        width: var(--dg-label-width, 50%) !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+        box-sizing: border-box !important;
       }
-      .dg .cr.boolean .property-name {
-        width: 65% !important;
+      .dg .cr .c {
+        width: calc(100% - var(--dg-label-width, 50%)) !important;
+        box-sizing: border-box !important;
       }
-      .dg .cr.boolean .c {
-        width: 35% !important;
-      }
-      .dg .cr.number .property-name,
-      .dg .cr.string .property-name,
-      .dg .cr.color .property-name {
-        width: 50% !important;
-      }
-      .dg .cr.number .c,
-      .dg .cr.string .c,
-      .dg .cr.color .c {
-        width: 50% !important;
+      /* 按钮/方法函数类型特殊处理，占满整行 */
+      .dg .cr.function .property-name {
+        width: 100% !important;
+        text-align: center !important;
       }
     `;
     document.head.appendChild(style);

@@ -225,7 +225,7 @@ async function init() {
   // 4. 异步加载 3D Tileset 模型
   try {
     tileset = await Cesium.Cesium3DTileset.fromUrl(
-      "/SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+      `${import.meta.env.BASE_URL}SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`,
     );
 
     viewer.scene.primitives.add(tileset);
@@ -263,7 +263,7 @@ async function init() {
 }
 
 function initDatGUI() {
-  gui = new MyDatGUI();
+  gui = new MyDatGUI({ width: 350, labelWidth: 0.3 });
   gui.modifyPosition(viewerDivRef.value);
 
   const carto = Cesium.Cartographic.fromCartesian(initialCenter);
