@@ -1,17 +1,17 @@
 <template>
-  <demo-box :codeBlocks>
-    <div class="eagle-eye-container">
-      <!-- 主三维视图 -->
-      <div class="main-viewer" ref="mainViewerRef"></div>
-      <!-- 鹰眼视图小窗口 -->
-      <div class="eagle-eye-wrapper">
-        <div class="eagle-eye-header">
-          <span class="title">鹰眼视图</span>
-        </div>
-        <div class="eagle-eye-viewer" ref="eagleEyeViewerRef"></div>
+  <!--<demo-box :codeBlocks>
+  </demo-box> -->
+  <div class="eagle-eye-container">
+    <!-- 主三维视图 -->
+    <div class="main-viewer" ref="mainViewerRef"></div>
+    <!-- 鹰眼视图小窗口 -->
+    <div class="eagle-eye-wrapper">
+      <div class="eagle-eye-header">
+        <span class="title">鹰眼视图</span>
       </div>
+      <div class="eagle-eye-viewer" ref="eagleEyeViewerRef"></div>
     </div>
-  </demo-box>
+  </div>
 </template>
 
 <script setup name="EagleEye">
@@ -41,7 +41,8 @@ const eagleEyeViewerRef = useTemplateRef("eagleEyeViewerRef");
 
 let viewer = null;
 let viewer1 = null;
-let syncEntity = null;
+let extentEntity = null;
+let removePreRenderListener = null;
 let timer = null;
 
 onMounted(() => {
@@ -50,7 +51,103 @@ onMounted(() => {
   }, 0);
 });
 
-// 相机视角同步函数
+// 预分配对象与缓存数组，彻底避免每帧 GC
+const scratchC2 = new Cesium.Cartesian2();
+let activePositions = [];
+let closedPositions = [];
+
+/**
+ * 拾取屏幕坐标与椭球面交点；若在地球外部（如全球远景或看天），则从中心向外二分逼近地平线切线边缘
+ */
+function pickScreenOrHorizon(
+  scene,
+  ellipsoid,
+  targetX,
+  targetY,
+  centerX,
+  centerY,
+) {
+  scratchC2.x = targetX;
+  scratchC2.y = targetY;
+  const directPos = scene.camera.pickEllipsoid(scratchC2, ellipsoid);
+  if (directPos) return Cesium.Cartesian3.clone(directPos);
+
+  // 如果目标角在地球外部，从中心点向目标角二分探测地平线边缘
+  let lowT = 0.0;
+  let highT = 1.0;
+  let bestPos = null;
+
+  for (let i = 0; i < 4; i++) {
+    const midT = (lowT + highT) * 0.5;
+    scratchC2.x = centerX + (targetX - centerX) * midT;
+    scratchC2.y = centerY + (targetY - centerY) * midT;
+    const testPos = scene.camera.pickEllipsoid(scratchC2, ellipsoid);
+    if (testPos) {
+      bestPos = testPos;
+      lowT = midT;
+    } else {
+      highT = midT;
+    }
+  }
+
+  return bestPos ? Cesium.Cartesian3.clone(bestPos) : null;
+}
+
+/**
+ * 获取主视图 Camera 在地面的 4 个角视域范围，支持任意旋转与全缩放等级
+ */
+function updateCameraExtent() {
+  if (!viewer || !viewer.scene || !viewer.camera) {
+    activePositions = [];
+    return;
+  }
+
+  const scene = viewer.scene;
+  const canvas = scene.canvas;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (width <= 0 || height <= 0) return;
+
+  const ellipsoid = scene.globe.ellipsoid;
+  const cx = width * 0.5;
+  const cy = height * 0.5;
+
+  // 四个角点（按顺时针/逆时针闭合顺序：左下 -> 右下 -> 右上 -> 左上）
+  const corners = [
+    { x: 0, y: height },
+    { x: width, y: height },
+    { x: width, y: 0 },
+    { x: 0, y: 0 },
+  ];
+
+  const points = [];
+  for (let i = 0; i < 4; i++) {
+    const pt = pickScreenOrHorizon(
+      scene,
+      ellipsoid,
+      corners[i].x,
+      corners[i].y,
+      cx,
+      cy,
+    );
+    if (pt) {
+      const prev = points[points.length - 1];
+      if (!prev || Cesium.Cartesian3.distance(pt, prev) > 1.0) {
+        points.push(pt);
+      }
+    }
+  }
+
+  if (points.length >= 3) {
+    activePositions = points;
+    closedPositions = points.concat(points[0]);
+  } else {
+    activePositions = [];
+    closedPositions = [];
+  }
+}
+
+// 相机视角同步与范围框更新函数
 function syncViewer() {
   if (!viewer || !viewer1 || !viewer.camera || !viewer1.camera) return;
 
@@ -62,31 +159,34 @@ function syncViewer() {
   const lat = Cesium.Math.toDegrees(carto.latitude);
   const mainHeight = carto.height; // 主图相机真实离地高度（米）
 
-  // 2. 模拟 OpenLayers 缩放等级差：设定等级差 deltaLevel（例如 4 级），高度扩大 2^4 = 16 倍
-  const deltaLevel = 4; // 相差 4 个缩放等级（可按需调整为 3~5 级）
-  const scaleRatio = Math.pow(2, deltaLevel); // 16 倍
+  // 2. 计算合理的高空比例：
+  const scaleRatio = 3.0;
 
-  // 设置合理的高低区间限制（Clamp）：
-  // - 最小保底高度（5000米）：避免贴地时鹰眼失去宏观意义
-  // - 最大高度上限（3.0e7米，约3.0万公里）：全球视角下刚好完整展示整颗地球
-  const minEagleEyeHeight = 5000.0;
-  const maxEagleEyeHeight = 30000000.0;
+  /**
+   * 设置平滑的高低区间限制（Clamp）:
+   *   - 最小高度（300米）：近地视角下依然能灵敏响应缩放
+   *   - 最大高度（2.0e7米）：全球视角下完整覆盖
+   */
+  const minEagleEyeHeight = 300.0;
+  const maxEagleEyeHeight = 20000000.0;
   const eagleEyeHeight = Cesium.Math.clamp(
     mainHeight * scaleRatio,
     minEagleEyeHeight,
     maxEagleEyeHeight,
   );
 
-  // 3. 将计算后的高空位置与姿态同步给鹰眼相机
-  viewer1.camera.flyTo({
+  // 3. 鹰眼视图保持正俯视平面视角，实现纯平面的二维小地图效果
+  viewer1.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(lon, lat, eagleEyeHeight),
     orientation: {
       heading: viewer.camera.heading,
-      pitch: viewer.camera.pitch,
-      roll: viewer.camera.roll,
+      pitch: Cesium.Math.toRadians(-90), // 正俯视
+      roll: 0,
     },
-    duration: 0.0,
   });
+
+  // 4. 更新主视口相机的平面视图范围
+  updateCameraExtent();
 }
 
 function init() {
@@ -98,7 +198,6 @@ function init() {
   // 2. 创建鹰眼视图
   viewer1 = createViewer(eagleEyeViewerRef.value, {
     clockViewModel: sharedClock,
-    sceneMode: Cesium.SceneMode.SCENE2D,
   });
   viewer1.resolutionScale = window.devicePixelRatio || 1.0;
 
@@ -110,30 +209,40 @@ function init() {
   control.enableTilt = false;
   control.enableLook = false;
 
-  // 4. 利用实体 CallbackProperty 逐帧执行同步逻辑（平滑零延迟联动）
-  // 这里随便写一个空间位置，Entity才能进入渲染队列，最终返回空字符串，即什么都不渲染
-  syncEntity = viewer.entities.add({
-    position: Cesium.Cartesian3.fromDegrees(0, 0),
-    label: {
-      text: new Cesium.CallbackProperty(() => {
-        syncViewer();
-        return "";
-      }, false), //第二个参数设置为false，表示不缓存回调结果，每次渲染都执行
-      //Cesium 在每一帧准备绘制该实体前，必须强行调用一次回调函数以获取最新值
+  // 4. 在鹰眼视图中添加主视图视域范围实体（纯红色线框，零剖分开销，全球拖动60FPS）
+  extentEntity = viewer1.entities.add({
+    name: "主视图视域范围",
+    show: new Cesium.CallbackProperty(() => activePositions.length >= 3, false),
+    polyline: {
+      positions: new Cesium.CallbackProperty(() => closedPositions, false),
+      width: 2.5,
+      material: Cesium.Color.RED,
+      arcType: Cesium.ArcType.NONE, // 纯直线段连接，无任何球面三角化细分开销
+      clampToGround: false,
     },
   });
+
+  // 5. 监听主场景 preRender 事件，每帧零开销平滑联动
+  removePreRenderListener = viewer.scene.preRender.addEventListener(syncViewer);
 }
 
 onBeforeUnmount(() => {
   if (timer) clearTimeout(timer);
-  if (viewer) {
-    if (syncEntity) {
-      viewer.entities.remove(syncEntity);
-    }
-    viewer.destroy();
+  if (removePreRenderListener) {
+    removePreRenderListener();
+    removePreRenderListener = null;
   }
   if (viewer1) {
+    if (extentEntity) {
+      viewer1.entities.remove(extentEntity);
+      extentEntity = null;
+    }
     viewer1.destroy();
+    viewer1 = null;
+  }
+  if (viewer) {
+    viewer.destroy();
+    viewer = null;
   }
 });
 </script>
@@ -153,8 +262,8 @@ onBeforeUnmount(() => {
 
   .eagle-eye-wrapper {
     position: absolute;
-    right: 20px;
-    bottom: 20px;
+    right: 8px;
+    bottom: 8px;
     width: 260px;
     height: 200px;
     background: rgba(30, 30, 30, 0.85);
