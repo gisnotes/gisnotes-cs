@@ -8,7 +8,7 @@
 import DemoBox from "@/components/DemoBox/index.vue";
 import IndexSourceCode from "./index.vue?raw";
 import CesiumSourceCode from "@/utils/cesium.js?raw";
-import cesiumLogoUrl from "@/assets/images/demo/images/Cesium_Logo_Color.jpg";
+const cesiumLogoUrl = "/Sandcastle2/images/Cesium_Logo_Color.jpg";
 
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
@@ -1851,10 +1851,5 @@ onBeforeUnmount(() => {
   height: 100%;
   position: absolute;
   inset: 0;
-}
-
-/** 隐藏底部版权 */
-:deep(.cesium-viewer-bottom) {
-  display: none;
 }
 </style>

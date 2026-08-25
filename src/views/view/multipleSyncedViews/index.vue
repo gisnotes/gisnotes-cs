@@ -132,8 +132,10 @@ onBeforeUnmount(() => {
   }
 }
 
-/** 隐藏底部版权 */
-:deep(.cesium-viewer-bottom) {
-  display: none;
+.viewer-container.box {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
 }
 </style>

@@ -58,9 +58,4 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
 }
-
-/** 隐藏底部版权 */
-:deep(.cesium-viewer-bottom) {
-  display: none;
-}
 </style>

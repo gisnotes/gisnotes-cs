@@ -70,4 +70,22 @@ export const LOCAL_ROUTES = [
       },
     ],
   },
+  {
+    name: "3dtile",
+    path: "/3dtile",
+    hidden: false,
+    redirect: "noRedirect",
+    component: "Layout",
+    alwaysShow: true,
+    meta: { title: "3DTiles", icon: "build", roles: ["admin"] },
+    children: [
+      {
+        path: "adjustHeight",
+        component: "3dtile/adjustHeight/index",
+        name: "AdjustHeight",
+        hidden: false,
+        meta: { title: "调整模型高度", icon: "build", roles: ["admin"] },
+      },
+    ],
+  },
 ];

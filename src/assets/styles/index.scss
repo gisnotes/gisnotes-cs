@@ -177,3 +177,8 @@ aside {
     margin-bottom: 10px;
   }
 }
+
+/** 全局隐藏 Cesium 底部版权与 Logo 信息 */
+.cesium-viewer-bottom {
+  display: none !important;
+}
