@@ -1,12 +1,12 @@
 <template>
   <div class="demo-box">
     <el-splitter>
-      <el-splitter-panel :size="50" :min="minWidth">
+      <el-splitter-panel :size="70" :min="minWidth">
         <div class="preview-container">
           <slot></slot>
         </div>
       </el-splitter-panel>
-      <el-splitter-panel :size="50" :min="minWidth">
+      <el-splitter-panel :size="30" :min="minWidth">
         <CodeBlockGroup :blocks="codeBlocks" />
       </el-splitter-panel>
     </el-splitter>

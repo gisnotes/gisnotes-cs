@@ -1,17 +1,17 @@
 <template>
-  <!--<demo-box :codeBlocks>
-  </demo-box> -->
-  <div class="eagle-eye-container">
-    <!-- 主三维视图 -->
-    <div class="main-viewer" ref="mainViewerRef"></div>
-    <!-- 鹰眼视图小窗口 -->
-    <div class="eagle-eye-wrapper">
-      <div class="eagle-eye-header">
-        <span class="title">鹰眼视图</span>
+  <demo-box :codeBlocks>
+    <div class="eagle-eye-container">
+      <!-- 主三维视图 -->
+      <div class="main-viewer" ref="mainViewerRef"></div>
+      <!-- 鹰眼视图小窗口 -->
+      <div class="eagle-eye-wrapper">
+        <div class="eagle-eye-header">
+          <span class="title">鹰眼视图</span>
+        </div>
+        <div class="eagle-eye-viewer" ref="eagleEyeViewerRef"></div>
       </div>
-      <div class="eagle-eye-viewer" ref="eagleEyeViewerRef"></div>
     </div>
-  </div>
+  </demo-box>
 </template>
 
 <script setup name="EagleEye">
