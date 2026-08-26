@@ -27,6 +27,13 @@ const codeBlocks = ref([
   },
 ]);
 
+/**
+ * 整体思路：
+ *  1. 首先将模型顶点从世界 ECEF 映射到局部 ENU（East-North-Up，东北天）坐标系，
+ *  2. 在局部空间做旋转与缩放后，再映射到目标位置的新 ENU 坐标系中，
+ *  3. 最终得到模型在世界坐标系下的 modelMatrix。
+ */
+
 const viewerDivRef = useTemplateRef("viewerRef");
 
 let viewer = null;
@@ -126,35 +133,53 @@ function computeTilesetMatrix(initialCenter, options = {}) {
   const defaultLat = Cesium.Math.toDegrees(initialCarto.latitude);
   const defaultAlt = initialCarto.height;
 
-  // 2. 计算目标位置的经纬度与高度
+  /**
+   * 2. 计算目标位置的经纬度与高度:
+   *  这里不是运行更改模型的经纬度，因此需要考虑下拖动控件后的模型的新经纬度及高度
+   */
   const targetLng = longitude !== undefined ? Number(longitude) : defaultLng;
   const targetLat = latitude !== undefined ? Number(latitude) : defaultLat;
   const targetAlt = defaultAlt + (Number(height) || 0);
 
-  // 3. 计算目标空间位置并构建目标位置的 ENU 坐标系矩阵 (自动贴合新地点的地表切平面，防止倾斜)
+  // 3. 计算目标空间位置：及将目标位置的经纬度和高度坐标转为三维笛卡尔坐标形式
   const targetCenter = Cesium.Cartesian3.fromDegrees(
     targetLng,
     targetLat,
     targetAlt,
   );
+
+  /**
+   * 4. 它计算出了一个 4x4 矩阵，用于把“以 targetCenter 为中心、朝向东-北-天的局部坐标(ENU)”
+   *    转换成“Cesium 的世界坐标（地心地固 ECEF）”
+   */
   const targetOriginMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
     targetCenter,
     Cesium.Ellipsoid.WGS84,
     new Cesium.Matrix4(),
   );
 
-  // 4. 构建原始位置的 ENU 矩阵及其逆矩阵
+  /**
+   * 5. 同上，用于将“以 initialCenter 为中心、朝向东-北-天的局部坐标(ENU)”
+   *    转换成“Cesium 的世界坐标（地心地固 ECEF）”
+   *
+   *  局部 ENU 坐标  ⟶ 世界 ECEF 坐标
+   */
   const originMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
     initialCenter,
     Cesium.Ellipsoid.WGS84,
     new Cesium.Matrix4(),
   );
+
+  /**
+   * 6. 计算局部 ENU 坐标系下的逆矩阵 (M_origin^(-1))，用于将世界坐标转换回局部 ENU 坐标
+   * 世界 ECEF 坐标 ⟶ 局部 ENU 坐标
+   */
   const invOriginMatrix = Cesium.Matrix4.inverse(
     originMatrix,
     new Cesium.Matrix4(),
   );
 
-  // 5. 分别计算局部坐标系下的三轴旋转矩阵并复合 (R = Rz * Ry * Rx)
+  // 7. 分别计算局部坐标系下的三轴旋转矩阵并复合 (R = Rz * Ry * Rx)
   const rx = Cesium.Matrix3.fromRotationX(
     Cesium.Math.toRadians(Number(rotateX) || 0),
   );
@@ -168,7 +193,7 @@ function computeTilesetMatrix(initialCenter, options = {}) {
   let rot = Cesium.Matrix3.multiply(rz, ry, new Cesium.Matrix3());
   rot = Cesium.Matrix3.multiply(rot, rx, new Cesium.Matrix3());
 
-  // 6. 计算 3x3 等比缩放矩阵并与旋转矩阵复合 (R_final = Rot * Scale)
+  // 8. 计算 3x3 等比缩放矩阵并与旋转矩阵复合 (R_final = Rot * Scale)
   const s = Number(scale) || 1.0;
   const scaleMatrix = Cesium.Matrix3.fromScale(
     new Cesium.Cartesian3(s, s, s),
@@ -176,14 +201,29 @@ function computeTilesetMatrix(initialCenter, options = {}) {
   );
   rot = Cesium.Matrix3.multiply(rot, scaleMatrix, new Cesium.Matrix3());
 
-  // 7. 构建局部空间变换矩阵 (Local Matrix)：局部平移为零（平移已直接包含在 targetCenter 的构建中）
+  /**
+   * 9. Matrix4.fromRotationTranslation
+   *  把 3x3 的旋转缩放矩阵和三维平移向量拼装成一个标准的 4x4 矩阵。
+   * ┌                        ┐
+   * │ rot00  rot01  rot02  0 │  <- 前 3 列为 3x3 旋转和缩放
+   * │ rot10  rot11  rot12  0 │
+   * │ rot20  rot21  rot22  0 │
+   * │   0      0      0    1 │  <- 第 4 列平移为 (0, 0, 0)
+   * └                        ┘
+   */
   const localMatrix = Cesium.Matrix4.fromRotationTranslation(
     rot,
     Cesium.Cartesian3.ZERO,
     new Cesium.Matrix4(),
   );
 
-  // 8. 坐标基底转换：M_world = M_target_enu * M_local * M_origin^(-1)
+  /**
+   * 10. 坐标基底转换：M_world = M_target_enu * M_local * M_origin^(-1)
+   * 最终顶点坐标 = [targetOriginMatrix] × [localMatrix] × [invOriginMatrix] × 原始顶点
+   *                └────────┬─────────┘   └─────┬─────┘   └────────┬──────┘
+   *                     第 3 步                第 2 步            第 1 步
+   *              放到新经纬度并贴平地面       原地自转与缩放     从地球表面拉回原点 (0,0,0)
+   */
   const temp = Cesium.Matrix4.multiply(
     targetOriginMatrix,
     localMatrix,
