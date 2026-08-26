@@ -7,4 +7,10 @@ export const GEOMETRIES_NODES = [
     status: STATUS.DONE,
     route: "/geometries/geometriesDraw",
   },
+  {
+    id: "geometries_2",
+    topic: "扇形绘制",
+    status: STATUS.DONE,
+    route: "/geometries/sectorDraw",
+  },
 ];

@@ -68,6 +68,13 @@ export const LOCAL_ROUTES = [
         hidden: false,
         meta: { title: "常见几何体绘制", icon: "geometry", roles: ["admin"] },
       },
+      {
+        path: "sectorDraw",
+        component: "geometries/sectorDraw/index",
+        name: "SectorDraw",
+        hidden: false,
+        meta: { title: "扇形绘制", icon: "geometry", roles: ["admin"] },
+      },
     ],
   },
   {
