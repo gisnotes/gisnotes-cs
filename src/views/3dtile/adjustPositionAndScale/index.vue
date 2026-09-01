@@ -12,7 +12,7 @@ import CesiumSourceCode from "@/utils/cesium.js?raw";
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
 import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
-import MyDatGUI from "@/utils/datGUI";
+import GUI from "lil-gui";
 
 const codeBlocks = ref([
   {
@@ -76,9 +76,9 @@ const controls = {
         ),
       );
     }
-    // 同步更新 dat.GUI 面板上的数值显示
+    // 同步更新 GUI 面板上的数值显示
     if (gui) {
-      gui.updateDisplay();
+      gui.controllersRecursive().forEach((c) => c.updateDisplay());
     }
   },
 };
@@ -298,13 +298,20 @@ async function init() {
     console.error(`tileset加载失败: ${error}`);
   }
 
-  // 5. 初始化 dat.GUI 控件面板
-  initDatGUI();
+  // 5. 初始化 lil-gui 控件面板
+  initGUI();
 }
 
-function initDatGUI() {
-  gui = new MyDatGUI({ width: 350, labelWidth: 0.3 });
-  gui.modifyPosition(viewerDivRef.value);
+function initGUI() {
+  gui = new GUI({
+    container: viewerDivRef.value,
+    title: "模型位姿与缩放调节",
+    width: 320,
+  });
+  gui.domElement.style.position = "absolute";
+  gui.domElement.style.top = "10px";
+  gui.domElement.style.right = "10px";
+  gui.domElement.style.zIndex = "5";
 
   const carto = Cesium.Cartographic.fromCartesian(initialCenter);
   const initialLng = Cesium.Math.toDegrees(carto.longitude);

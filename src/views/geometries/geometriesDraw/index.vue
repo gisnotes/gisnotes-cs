@@ -23,7 +23,7 @@ import {
   createCoordinateLabel,
   createRhumbGrid,
 } from "./utils.js";
-import MyDatGUI from "@/utils/datGUI";
+import GUI from "lil-gui";
 
 const codeBlocks = ref([
   {
@@ -1391,12 +1391,17 @@ function init() {
 }
 
 function initGUI(entities, defaultOffset) {
-  gui = new MyDatGUI({width: 230, labelWidth: 0.7});
-  gui.modifyPosition(viewerDivRef.value, {
-    position: "absolute",
-    top: "6px",
-    left: "6px",
+  gui = new GUI({
+    container: viewerDivRef.value,
+    title: "Cesium 几何体合集",
+    width: 280,
+    closeFolders: true,
   });
+  gui.domElement.style.position = "absolute";
+  gui.domElement.style.top = "6px";
+  gui.domElement.style.left = "6px";
+  gui.domElement.style.maxHeight = "calc(100% - 12px)";
+  gui.domElement.style.zIndex = "5";
 
   const controls = {
     // 立方体
@@ -1753,7 +1758,7 @@ function initGUI(entities, defaultOffset) {
       controls.zIndexGreenRect2 = val;
       controls.zIndexBlueRect1 = val;
       controls.zIndexPolyline2 = val;
-      gui.updateDisplay();
+      gui.controllersRecursive().forEach((c) => c.updateDisplay());
       if (val) {
         viewer.zoomTo(zIndexEntitiesList, defaultOffset);
       }

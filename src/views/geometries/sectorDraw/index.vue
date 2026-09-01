@@ -12,7 +12,7 @@ import CesiumSourceCode from "@/utils/cesium.js?raw";
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
 import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
-import MyDatGUI from "@/utils/datGUI";
+import GUI from "lil-gui";
 
 const codeBlocks = ref([
   {
@@ -246,13 +246,20 @@ function init() {
   // 5. 相机聚焦至实体
   viewer.zoomTo(viewer.entities);
 
-  // 6. 初始化 dat.GUI 面板
-  initDatGUI();
+  // 6. 初始化 lil-gui 面板
+  initGUI();
 }
 
-function initDatGUI() {
-  gui = new MyDatGUI({ width: 330, labelWidth: 0.35 });
-  gui.modifyPosition(viewerDivRef.value);
+function initGUI() {
+  gui = new GUI({
+    container: viewerDivRef.value,
+    title: "三维立体扇形控制",
+    width: 300,
+  });
+  gui.domElement.style.position = "absolute";
+  gui.domElement.style.top = "10px";
+  gui.domElement.style.right = "10px";
+  gui.domElement.style.zIndex = "5";
 
   const posFolder = gui.addFolder("位置与尺寸");
   posFolder
@@ -275,8 +282,6 @@ function initDatGUI() {
     .name("拉伸高度 (米)")
     .onChange(() => renderSector());
 
-  posFolder.open();
-
   const styleFolder = gui.addFolder("样式与显隐");
   // 颜色与不透明度由 material 中的 CallbackProperty 自动逐帧响应，修改数值即时生效且绝对无闪烁
   styleFolder.addColor(controls, "color").name("扇形颜色");
@@ -287,8 +292,6 @@ function initDatGUI() {
     .add(controls, "showPoints")
     .name("显示采样点")
     .onChange((val) => updatePointsVisibility(val));
-
-  styleFolder.open();
 
   gui.add(controls, "resetView").name("重置聚焦视角");
 }
