@@ -137,6 +137,13 @@ export const LOCAL_ROUTES = [
     meta: { title: "材质", icon: "color", roles: ["admin"] },
     children: [
       {
+        path: "changeColor",
+        component: "material/changeColor/index",
+        name: "ChangeColor",
+        hidden: false,
+        meta: { title: "变更颜色", icon: "color", roles: ["admin"] },
+      },
+      {
         path: "gradientMaterial",
         component: "material/gradientMaterial/index",
         name: "GradientMaterial",
