@@ -242,6 +242,7 @@ function filterChildren(childrenMap, lastRouter = false) {
 //   return res
 // }
 
+// 路由异步视图加载器
 export const loadView = (view) => {
   let res;
   for (const path in modules) {
