@@ -12,7 +12,7 @@ import CesiumSourceCode from "@/utils/cesium.js?raw";
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
 import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
-import GUI from "lil-gui";
+import { CustomGUI } from "@/utils/gui";
 
 const codeBlocks = ref([
   {
@@ -251,15 +251,10 @@ function init() {
 }
 
 function initGUI() {
-  gui = new GUI({
+  gui = new CustomGUI({
     container: viewerDivRef.value,
     title: "三维立体扇形控制",
-    width: 300,
   });
-  gui.domElement.style.position = "absolute";
-  gui.domElement.style.top = "10px";
-  gui.domElement.style.right = "10px";
-  gui.domElement.style.zIndex = "5";
 
   const posFolder = gui.addFolder("位置与尺寸");
   posFolder

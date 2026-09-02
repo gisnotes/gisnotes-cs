@@ -12,7 +12,7 @@ import CesiumSourceCode from "@/utils/cesium.js?raw";
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
 import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
-import GUI from "lil-gui";
+import { CustomGUI } from "@/utils/gui";
 
 const codeBlocks = ref([
   {
@@ -156,15 +156,10 @@ async function init() {
 }
 
 function initGUI() {
-  gui = new GUI({
+  gui = new CustomGUI({
     container: viewerDivRef.value,
     title: "3D Tiles 高度调整",
-    width: 280,
   });
-  gui.domElement.style.position = "absolute";
-  gui.domElement.style.top = "10px";
-  gui.domElement.style.right = "10px";
-  gui.domElement.style.zIndex = "5";
 
   gui
     .add(controls, "height", -100, 100, 1)

@@ -12,7 +12,7 @@ import CesiumSourceCode from "@/utils/cesium.js?raw";
 import Cesium from "cesium";
 import "cesium/Build/CesiumUnminified/Widgets/widgets.css";
 import { createViewer, optimizeViewerQuality } from "@/utils/cesium";
-import GUI from "lil-gui";
+import { CustomGUI } from "@/utils/gui";
 
 const codeBlocks = ref([
   {
@@ -303,15 +303,10 @@ async function init() {
 }
 
 function initGUI() {
-  gui = new GUI({
+  gui = new CustomGUI({
     container: viewerDivRef.value,
     title: "模型位姿与缩放调节",
-    width: 320,
   });
-  gui.domElement.style.position = "absolute";
-  gui.domElement.style.top = "10px";
-  gui.domElement.style.right = "10px";
-  gui.domElement.style.zIndex = "5";
 
   const carto = Cesium.Cartographic.fromCartesian(initialCenter);
   const initialLng = Cesium.Math.toDegrees(carto.longitude);

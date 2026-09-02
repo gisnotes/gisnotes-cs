@@ -1,5 +1,11 @@
 <template>
-  <svg :class="svgClass" aria-hidden="true">
+  <i
+    v-if="isFontClass"
+    :class="['sub-el-icon', iconClass, className]"
+    :style="{ color: color || undefined }"
+    aria-hidden="true"
+  />
+  <svg v-else :class="svgClass" aria-hidden="true">
     <use :xlink:href="iconName" :fill="color" />
   </svg>
 </template>
@@ -9,29 +15,48 @@ export default defineComponent({
   props: {
     iconClass: {
       type: String,
-      required: true
+      required: true,
     },
     className: {
       type: String,
-      default: ''
+      default: "",
     },
     color: {
       type: String,
-      default: ''
+      default: "",
     },
   },
   setup(props) {
+    const isFontClass = computed(() => {
+      if (!props.iconClass) return false;
+      return (
+        props.iconClass.startsWith("iconfont") ||
+        props.iconClass.startsWith("el-icon")
+      );
+    });
+
+    const iconName = computed(() => {
+      if (!props.iconClass) return "";
+      if (props.iconClass.startsWith("#")) return props.iconClass;
+      // 若已经是 icon-xxx，则直接加 #，避免变成 #icon-icon-xxx
+      if (props.iconClass.startsWith("icon-")) return `#${props.iconClass}`;
+      return `#icon-${props.iconClass}`;
+    });
+
+    const svgClass = computed(() => {
+      if (props.className) {
+        return `svg-icon ${props.className}`;
+      }
+      return "svg-icon";
+    });
+
     return {
-      iconName: computed(() => `#icon-${props.iconClass}`),
-      svgClass: computed(() => {
-        if (props.className) {
-          return `svg-icon ${props.className}`
-        }
-        return 'svg-icon'
-      })
-    }
-  }
-})
+      isFontClass,
+      iconName,
+      svgClass,
+    };
+  },
+});
 </script>
 
 <style scope lang="scss">
