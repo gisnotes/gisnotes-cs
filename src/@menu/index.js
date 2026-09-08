@@ -148,7 +148,7 @@ export const LOCAL_ROUTES = [
         component: "material/gradientMaterial/index",
         name: "GradientMaterial",
         hidden: false,
-        meta: { title: "渐变色材质", icon: "color", roles: ["admin"] },
+        meta: { title: "渐变色材质", icon: "icon-jianbiantiao", roles: ["admin"] },
       },
     ],
   },
