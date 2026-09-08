@@ -141,7 +141,7 @@ export const LOCAL_ROUTES = [
     redirect: "noRedirect",
     component: "Layout",
     alwaysShow: true,
-    meta: { title: "材质", icon: "color", roles: ["admin"] },
+    meta: { title: "材质", icon: "icon-caizhi1", roles: ["admin"] },
     children: [
       {
         path: "changeColor",
@@ -156,6 +156,13 @@ export const LOCAL_ROUTES = [
         name: "GradientMaterial",
         hidden: false,
         meta: { title: "渐变色材质", icon: "icon-jianbiantiao", roles: ["admin"] },
+      },
+      {
+        path: "videoTexture",
+        component: "material/videoTexture/index",
+        name: "VideoTexture",
+        hidden: false,
+        meta: { title: "视频材质", icon: "icon-video", roles: ["admin"] },
       },
     ],
   },

@@ -13,5 +13,11 @@ export const MATERIAL_NODES = [
     status: STATUS.DONE,
     route: "/material/gradientMaterial",
   },
+  {
+    id: "material_3",
+    topic: "视频材质",
+    status: STATUS.DONE,
+    route: "/material/videoTexture",
+  },
 ];
 
