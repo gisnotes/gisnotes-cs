@@ -75,6 +75,13 @@ export const LOCAL_ROUTES = [
         hidden: false,
         meta: { title: "扇形绘制", icon: "a-xigua_watermelon-one2", roles: ["admin"] },
       },
+      {
+        path: "groundPolylineDraw",
+        component: "geometries/groundPolylineDraw/index",
+        name: "GroundPolylineDraw",
+        hidden: false,
+        meta: { title: "绘制贴地线", icon: "icon-tiedixian", roles: ["admin"] },
+      },
     ],
   },
   {

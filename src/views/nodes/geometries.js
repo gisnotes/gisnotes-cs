@@ -13,4 +13,10 @@ export const GEOMETRIES_NODES = [
     status: STATUS.DONE,
     route: "/geometries/sectorDraw",
   },
+  {
+    id: "geometries_3",
+    topic: "绘制贴地线",
+    status: STATUS.DONE,
+    route: "/geometries/groundPolylineDraw",
+  },
 ];
