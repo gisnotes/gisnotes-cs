@@ -152,4 +152,22 @@ export const LOCAL_ROUTES = [
       },
     ],
   },
+  {
+    name: "SpaceAnalysis",
+    path: "/spaceAnalysis",
+    hidden: false,
+    redirect: "noRedirect",
+    component: "Layout",
+    alwaysShow: true,
+    meta: { title: "空间分析", icon: "icon-dilikongjianfenxi", roles: ["admin"] },
+    children: [
+      {
+        path: "overlayAnalysis",
+        component: "spaceAnalysis/overlayAnalysis/index",
+        name: "OverlayAnalysis",
+        hidden: false,
+        meta: { title: "叠加分析", icon: "icon-diejiafenxi", roles: ["admin"] },
+      },
+    ],
+  },
 ];

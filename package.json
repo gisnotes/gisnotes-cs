@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.2",
+    "@turf/turf": "^7.4.0",
     "@vueup/vue-quill": "1.2.0",
     "@vueuse/core": "14.1.0",
     "axios": "1.13.2",

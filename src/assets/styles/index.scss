@@ -182,3 +182,8 @@ aside {
 .cesium-viewer-bottom {
   display: none !important;
 }
+
+/** 全局 Cesium 帧率 (FPS) 显示组件：默认距离顶部 8px */
+.cesium-performanceDisplay-defaultContainer {
+  top: 8px !important;
+}
