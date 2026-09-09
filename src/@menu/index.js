@@ -202,4 +202,29 @@ export const LOCAL_ROUTES = [
       },
     ],
   },
+  {
+    name: "DataVisualization",
+    path: "/dataVisualization",
+    hidden: false,
+    redirect: "noRedirect",
+    component: "Layout",
+    alwaysShow: true,
+    meta: { title: "数据可视化", icon: "chart", roles: ["admin"] },
+    children: [
+      {
+        path: "cesiumHeatmap",
+        component: "dataVisualization/cesiumHeatmap/index",
+        name: "CesiumHeatmap",
+        hidden: false,
+        meta: { title: "Cesium热力图", icon: "color", roles: ["admin"] },
+      },
+      {
+        path: "heatmap3D",
+        component: "dataVisualization/heatmap3D/index",
+        name: "Heatmap3D",
+        hidden: false,
+        meta: { title: "3D热力图", icon: "3Dkeshiyufenxi", roles: ["admin"] },
+      },
+    ],
+  },
 ];

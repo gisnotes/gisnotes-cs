@@ -7,6 +7,7 @@ import { CAMERA_NODES } from "./camera";
 import { MATERIAL_NODES } from "./material";
 import { SPACE_ANALYSIS_NODES } from "./spaceAnalysis";
 import { TRAJECTORY_NODES } from "./trajectory";
+import { DATA_VISUALIZATION_NODES } from "./dataVisualization";
 
 export { STATUS };
 
@@ -18,6 +19,7 @@ export const NODE_GROUPS = [
   { id: "material", topic: "材质", nodes: MATERIAL_NODES },
   { id: "spaceAnalysis", topic: "空间分析", nodes: SPACE_ANALYSIS_NODES },
   { id: "trajectory", topic: "轨迹", nodes: TRAJECTORY_NODES },
+  { id: "dataVisualization", topic: "数据可视化", nodes: DATA_VISUALIZATION_NODES },
 ];
 
 export const ALL_NODES = [
@@ -28,5 +30,6 @@ export const ALL_NODES = [
   ...MATERIAL_NODES,
   ...SPACE_ANALYSIS_NODES,
   ...TRAJECTORY_NODES,
+  ...DATA_VISUALIZATION_NODES,
   ...MODEL3D_NODES,
 ];
