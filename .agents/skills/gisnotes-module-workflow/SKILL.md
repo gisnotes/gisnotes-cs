@@ -41,10 +41,10 @@ flowchart TD
 本项目页面均为结合 **Cesium** 的可视化与三维空间分析示例。引入并创建 `Viewer` 对象必须严格遵循以下规则，参考标准范例（如 [src/views/camera/cameraVisualization/index.vue](file:///d:/Users/Downloads/gisnotes-cs/src/views/camera/cameraVisualization/index.vue)）：
 
 > [!IMPORTANT]
-> **Viewer 创建与作用域三大铁律：**
-> 1. **统一使用工具方法**：创建 `Viewer` 对象必须统一调用 `@/utils/cesium.js` 导出的 `createViewer` 和 `optimizeViewerQuality` 方法（严禁直接使用原生 `new Cesium.Viewer()` 构造，以便继承全局默认影像图层与统一优化配置）；
-> 2. **严禁挂载全局 Window**：无论用户给出的外部代码还是自研代码，**一律严禁将 Viewer 对象挂载到全局 `window` 上**（如严禁 `window.viewer = viewer`），必须使用组件内局部变量 `let viewer = null;` 维护，防止路由切换时产生内存泄漏与多实例冲突；
-> 3. **完整生命周期销毁**：在组件卸载钩子 `onBeforeUnmount` 中，必须显式调用 `viewer.destroy()` 释放 WebGL 上下文与三维场景资源。
+> **新页面默认初始模板规范（Viewer 与 CustomGUI 必须默认齐备）：**
+> 1. **默认加 Viewer 对象**：每次新建页面时，即使用户尚未提及具体功能，**必须默认初始化一个标准 Viewer 对象**。创建 `Viewer` 统一调用 `@/utils/cesium.js` 导出的 `createViewer` 和 `optimizeViewerQuality` 方法（严禁原生 `new Cesium.Viewer()` 构造，严禁挂载全局 `window.viewer = viewer`）；
+> 2. **默认初始化空的 CustomGUI 组件**：每次新建页面时，**必须默认引入并初始化一个空的控制面板组件**（统一使用 `@/utils/gui.js` 导出的 `CustomGUI` 类：`gui = new CustomGUI({ container: viewerDivRef.value, title: "控制面板" })`），挂载于当前地图容器上备用；
+> 3. **完整生命周期销毁**：在组件卸载钩子 `onBeforeUnmount` 中，必须显式调用 `gui?.destroy()` 与 `viewer?.destroy()` 释放所有资源。
 
 **标准页面模板结构：**
 ```vue
@@ -258,6 +258,8 @@ export const ALL_NODES = [
    新建 Cesium 页面示例时，必须统一导入并使用 `@/utils/cesium.js` 中的 `createViewer` 和 `optimizeViewerQuality` 方法初始化，不要手写 `new Cesium.Viewer`；且严禁将实例挂载到 `window.viewer`。
 5. **日常无需每次全量打包验证**：
    日常开发生成或修改代码后，**默认无需每次执行 `pnpm run build:prod` 全量打包编译**；仅当用户明确指示“打包”、“构建”或“验证构建”时才执行打包命令，以保证交互的高效与迅速。
+6. **默认集成基础 Viewer 与空 CustomGUI**：
+   当用户要求新建页面且未说明具体功能时，必须默认调用 `@/utils/cesium.js` 的 `createViewer` 和 `optimizeViewerQuality` 初始化标准 Viewer，并统一引入 `@/utils/gui.js` 的 `CustomGUI` 实例化空的控制面板（`gui = new CustomGUI({ container: viewerDivRef.value, title: "控制面板" })`），挂载在左上角并支持卸载清理，方便后续快速扩展控制项。
 
 ---
 

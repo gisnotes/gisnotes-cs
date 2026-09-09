@@ -184,4 +184,22 @@ export const LOCAL_ROUTES = [
       },
     ],
   },
+  {
+    name: "Trajectory",
+    path: "/trajectory",
+    hidden: false,
+    redirect: "noRedirect",
+    component: "Layout",
+    alwaysShow: true,
+    meta: { title: "轨迹", icon: "icon-yundanguiji", roles: ["admin"] },
+    children: [
+      {
+        path: "czmlDroneInspection",
+        component: "trajectory/czmlDroneInspection/index",
+        name: "CzmlDroneInspection",
+        hidden: false,
+        meta: { title: "CZML无人机巡检推流", icon: "icon-Czml", roles: ["admin"] },
+      },
+    ],
+  },
 ];
